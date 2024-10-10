@@ -296,3 +296,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Add debug information if needed
+if st.checkbox("Show debug info"):
+    st.write("Session state edited_texts:", st.session_state.edited_texts)
+    st.write("Current page:", st.session_state.page_num)
