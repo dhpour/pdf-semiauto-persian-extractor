@@ -131,6 +131,8 @@ def main():
         st.session_state.results = None
     if 'total_pages' not in st.session_state:
         st.session_state.total_pages = 0
+    if 'edited_texts' not in st.session_state:
+        st.session_state.edited_texts = {}
     
     # Sidebar configuration
     st.sidebar.header("Configuration")
@@ -221,6 +223,18 @@ def main():
             img_bytes = pix.tobytes("png")
             st.image(img_bytes, use_column_width=True)
         
+        def update_text(method):
+            text_key = f"text_{st.session_state.page_num}_{method}"
+            # Update the edited_texts dictionary with the new text
+            page_method_key = f"{st.session_state.page_num}_{method}"
+            st.session_state.edited_texts[page_method_key] = st.session_state[text_key]
+            
+            # Also update the results list for consistency
+            for result in st.session_state.results:
+                if result["page"] == st.session_state.page_num and result["method"] == method:
+                    result["text"] = st.session_state[text_key]
+                    break
+
         with left_col:
             st.header("Extracted Text")
             page_results = [r for r in st.session_state.results if r["page"] == st.session_state.page_num]
@@ -229,10 +243,27 @@ def main():
                 for result in page_results:
                     method = result["method"]
                     st.subheader(f"{method}")
+
+                    # Create a unique key for the text area
+                    text_key = f"text_{st.session_state.page_num}_{method}"
+                    page_method_key = f"{st.session_state.page_num}_{method}"
+                    
+                    # Get the text from edited_texts if it exists, otherwise from result
+                    if page_method_key in st.session_state.edited_texts:
+                        current_text = st.session_state.edited_texts[page_method_key]
+                    else:
+                        current_text = result["text"]
+                    
+                    # Update session state
+                    st.session_state[text_key] = current_text
+                    
+                    # Display the text area
                     edited_text = st.text_area(
                         f"Edit text if needed",
-                        result["text"],
-                        key=f"text_{st.session_state.page_num}_{method}"
+                        value=current_text,
+                        key=text_key,
+                        on_change=update_text,
+                        args=(method,)
                     )
             else:
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
