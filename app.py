@@ -191,7 +191,7 @@ def main():
 
         # Option 2: If you prefer to keep the number input instead of the slider
         # Uncomment this and comment out the slider above
-        """
+        
         st.sidebar.number_input(
             "Page", 
             min_value=1, 
@@ -200,7 +200,7 @@ def main():
             key="page_input",
             on_change=lambda: setattr(st.session_state, 'page_num', st.session_state.page_input)
         )
-        """
+        
 
         # Navigation UI
         col1, col2, col3, col4 = st.sidebar.columns(4)
