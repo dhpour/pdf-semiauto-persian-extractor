@@ -1,5 +1,9 @@
 import pdfplumber
 import fitz
+import pytesseract
+from pdf2image import convert_from_path
+from PIL import Image
+import numpy as np
 
 class PDFProcessor:
     def __init__(self):
@@ -75,7 +79,44 @@ class PDFProcessor:
             return results
         except ImportError:
             return [{"page": 1, "text": "doctr is not installed. Install with: pip install python-doctr"}]
+
+    def process_with_pdf2image_tesseract(self, pdf_path):
+        results = []
+        pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+        pdf = convert_from_path(pdf_path, poppler_path='D:\\poppler-24.08.0\\Library\\bin')
+        for page_num in range(len(pdf)):
+            text = pytesseract.image_to_string(pdf[page_num], lang='fas')
+            results.append({
+                "page": page_num + 1,
+                "text": text if text else "No text extracted"
+            })
+        return results
     
+    def process_with_tesseract(self, pdf_path):
+        try:
+            results = []
+            pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+
+            for page_num in range(len(self.doc)):
+                page = self.doc[page_num]
+                pix = page.get_pixmap()
+                
+                # Convert PyMuPDF pixmap to PIL Image
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                
+                # Perform OCR
+                text = pytesseract.image_to_string(img, lang='fas+ara')
+                
+                results.append({
+                    "page": page_num + 1,
+                    "text": text if text else "No text extracted"
+                })
+            return results
+        except ImportError:
+            return [{"page": 1, "text": "Tesseract is not installed. Install with: pip install pytesseract"}]
+        except Exception as e:
+            return [{"page": 1, "text": f"Error processing with Tesseract: {str(e)}"}]
+
     def cleanup(self):
         if self.doc:
             self.doc.close()

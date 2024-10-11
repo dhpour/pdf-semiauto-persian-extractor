@@ -89,6 +89,17 @@ def process_pdf(processor, pdf_path, extraction_method):
             r["method"] = "doctr"
         results.extend(doctr_results)
     
+    if extraction_method == "pdf2image/tesseract" or extraction_method == "All Methods":
+        tesser_results = processor.process_with_pdf2image_tesseract(pdf_path)
+        for r in tesser_results:
+            r["method"] = "pdf2image/tesseract"
+        results.extend(tesser_results)
+    
+    if extraction_method == "tesseract" or extraction_method == "All Methods":
+        tesser_results = processor.process_with_tesseract(pdf_path)
+        for r in tesser_results:
+            r["method"] = "tesseract"
+        results.extend(tesser_results)
     return results
 
 def main():
@@ -111,7 +122,7 @@ def main():
     
     # Sidebar configuration
     st.sidebar.header("Configuration")
-    extraction_methods = ["pdfplumber", "PyMuPDF"]
+    extraction_methods = ["pdfplumber", "PyMuPDF", "pdf2image/tesseract", "tesseract"]
     try:
         import doctr
         extraction_methods.extend(["doctr (OCR)", "All Methods"])
