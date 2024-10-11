@@ -55,7 +55,7 @@ def download_json_button():
         st.sidebar.download_button(
             label="📥 Download Extracted Text (JSON)",
             data=json_str,
-            file_name=all_data['metadata']['filename'].split('.pdf')[0]+'.json', #"pdf_extraction.json",
+            file_name=all_data['metadata']['filename'].split('.pdf')[0]+'.json',
             mime="application/json",
         )
 
