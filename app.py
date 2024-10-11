@@ -24,6 +24,8 @@ def get_all_text_data():
             "page_number": page_num,
             "extractions": []
         }
+        if st.session_state.first_human_page != -1:
+            page_data['human_page_number'] = page_num - st.session_state.first_human_page + 1 if page_num - st.session_state.first_human_page >= 0 else -1
         
         # Get results for this page
         page_results = [r for r in st.session_state.results if r["page"] == page_num]
@@ -100,6 +102,8 @@ def main():
         st.session_state.total_pages = 0
     if 'edited_texts' not in st.session_state:
         st.session_state.edited_texts = {}
+    if 'first_human_page' not in st.session_state:
+        st.session_state.first_human_page = -1
     
     # Sidebar configuration
     st.sidebar.header("Configuration")
@@ -210,10 +214,22 @@ def main():
                     result["text"] = st.session_state[text_key]
                     break
 
+        def set_human_page():
+            st.session_state.first_human_page = st.session_state.page_num
+            print(st.session_state.first_human_page)
+
         with left_col:
             st.header("Extracted Text")
             page_results = [r for r in st.session_state.results if r["page"] == st.session_state.page_num]
             
+            st.sidebar.button(
+                label="Set current page as 1st human page",
+                on_click=set_human_page
+            )
+            st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
+            st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
+            #st.sidebar.text()
+
             if page_results:
                 for result in page_results:
                     method = result["method"]
@@ -249,6 +265,8 @@ def main():
     with st.expander("Debug Information", expanded=False):
         st.write("Session state edited_texts:", st.session_state.edited_texts)
         st.write("Current page:", st.session_state.page_num)
+        st.write("Human 1st Page:", st.session_state.first_human_page)
+        st.write("Human Page Number:", st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1)
         if st.session_state.results:
             st.write("Number of pages:", len(st.session_state.results))
             st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))
