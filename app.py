@@ -5,6 +5,59 @@ import os
 import tempfile
 import re
 import string
+import json
+from datetime import datetime
+
+def get_all_text_data():
+    all_data = {
+        "metadata": {
+            "export_date": datetime.now().isoformat(),
+            "filename": st.session_state.get('uploaded_filename', 'Unknown'),
+            "total_pages": st.session_state.total_pages,
+            "extraction_method": st.session_state.extraction_method
+        },
+        "pages": []
+    }
+    
+    # Combine original results with edited texts
+    for page_num in range(1, st.session_state.total_pages + 1):
+        page_data = {
+            "page_number": page_num,
+            "extractions": []
+        }
+        
+        # Get results for this page
+        page_results = [r for r in st.session_state.results if r["page"] == page_num]
+        
+        for result in page_results:
+            method = result["method"]
+            page_method_key = f"{page_num}_{method}"
+            
+            # Use edited text if available, otherwise use original
+            text = st.session_state.edited_texts.get(page_method_key, result["text"])
+            
+            extraction_data = {
+                "method": method,
+                "text": text,
+                "is_edited": page_method_key in st.session_state.edited_texts
+            }
+            page_data["extractions"].append(extraction_data)
+        
+        all_data["pages"].append(page_data)
+    
+    return all_data
+
+def download_json_button():
+    if st.session_state.results:
+        all_data = get_all_text_data()
+        json_str = json.dumps(all_data, ensure_ascii=False, indent=2)
+        
+        st.sidebar.download_button(
+            label="📥 Download Extracted Text (JSON)",
+            data=json_str,
+            file_name=all_data['metadata']['filename'].split('.pdf')[0]+'.json', #"pdf_extraction.json",
+            mime="application/json",
+        )
 
 class PDFProcessor:
     def __init__(self):
@@ -148,6 +201,10 @@ def main():
     uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf")
     
     if uploaded_file is not None:
+
+        # Store filename in session state
+        st.session_state.uploaded_filename = uploaded_file.name
+
         # Process PDF only if it's a new file or extraction method changed
         file_contents = uploaded_file.getvalue()
         current_file_hash = hash(file_contents)
@@ -212,7 +269,11 @@ def main():
         col3.button("▶", on_click=next_page)
         col4.button("⏭️", on_click=last_page)
         
-                
+        # Add download button to sidebar
+        st.sidebar.markdown("---")
+        st.sidebar.header("Export")
+        download_json_button()
+
         # Display content
         left_col, right_col = st.columns([1, 1])
         
@@ -302,6 +363,12 @@ st.markdown("""
     
     .stHeader {
         margin-bottom: 1rem;
+    }
+
+    /* Style for the download button in sidebar */
+    .sidebar .stDownloadButton button {
+        width: 100%;
+        margin-top: 0.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
