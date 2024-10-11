@@ -4,14 +4,16 @@ import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
 import numpy as np
+import re
+import string
 
 class PDFProcessor:
     def __init__(self):
         self.doctr_model = None
         self.temp_pdf_path = None
         self.doc = None
-        self.latin_digits = "123456789098764321"
-        self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٩٨٧٦٤٣٢١"
+        self.latin_digits = "1234567890987654321"
+        self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٩٨٧٦٥٤٣٢١"
         self.repl = str.maketrans(self.farsi_digits, self.latin_digits)
     
     def init_doctr(self):
@@ -26,13 +28,13 @@ class PDFProcessor:
         self.doc = fitz.open(pdf_path)
         return len(self.doc)
 
-    def reverse_match_plumber(self, match):
+    def reverse_match(self, match):
         return match.group(0)[::-1]
         
-    def justifies_lefties_plumber(self, txt):
+    def justifies_lefties(self, txt):
         new_txt = txt.translate(self.repl)
-        new_txt = re.sub('[A-Za-z' + string.punctuation + ']+', self.reverse_match_plumber, new_txt)
-        new_txt = re.sub(r'\d+', self.reverse_match_plumber, new_txt)
+        new_txt = re.sub('[A-Za-z' + string.punctuation + ']+', self.reverse_match, new_txt)
+        new_txt = re.sub(r'\d+', self.reverse_match, new_txt)
         return new_txt
 
     def adjust_plumber_text(self, text):
@@ -58,7 +60,7 @@ class PDFProcessor:
             text = page.get_text()
             results.append({
                 "page": page_num + 1,
-                "text": text if text else "No text extracted"
+                "text": self.justifies_lefties(text) if text else "No text extracted"
             })
         return results
     
