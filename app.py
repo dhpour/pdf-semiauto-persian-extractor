@@ -122,10 +122,11 @@ def main():
     
     # Sidebar configuration
     st.sidebar.header("Configuration")
-    extraction_methods = ["pdfplumber", "PyMuPDF", "pdf2image/tesseract", "tesseract"]
+    extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF"] #, "pdf2image/tesseract"]
     try:
-        import doctr
-        extraction_methods.extend(["doctr (OCR)", "All Methods"])
+        #import doctr
+        #extraction_methods.extend(["doctr (OCR)", "All Methods"])
+        pass
     except ImportError:
         pass
     
@@ -183,15 +184,14 @@ def main():
 
         # Option 2: If you prefer to keep the number input instead of the slider
         # Uncomment this and comment out the slider above
-        
-        st.sidebar.number_input(
-            "Page", 
-            min_value=1, 
-            max_value=st.session_state.total_pages,
-            value=st.session_state.page_num,
-            key="page_input",
-            on_change=lambda: setattr(st.session_state, 'page_num', st.session_state.page_input)
-        )
+        #st.sidebar.number_input(
+        #    "Page", 
+        #    min_value=1, 
+        #    max_value=st.session_state.total_pages,
+        #    value=st.session_state.page_num,
+        #    key="page_input",
+        #    on_change=lambda: setattr(st.session_state, 'page_num', st.session_state.page_input)
+        #)
         
 
         # Navigation UI
@@ -211,7 +211,8 @@ def main():
         left_col, right_col = st.columns([1, 1])
         
         with right_col:
-            st.header(f"PDF Page {st.session_state.page_num}")
+            #st.header(f"PDF Page {st.session_state.page_num}")
+            st.subheader(f"PDF page {st.session_state.page_num}")
             page = processor.doc.load_page(st.session_state.page_num - 1)
             pix = page.get_pixmap()
             img_bytes = pix.tobytes("png")
@@ -234,7 +235,7 @@ def main():
             print(st.session_state.first_human_page)
 
         with left_col:
-            st.header("Extracted Text")
+            #st.header("Extracted Text")
             page_results = [r for r in st.session_state.results if r["page"] == st.session_state.page_num]
             
             st.sidebar.button(
@@ -248,7 +249,8 @@ def main():
             if page_results:
                 for result in page_results:
                     method = result["method"]
-                    st.subheader(f"{method}")
+                    #st.subheader(f"{method}")
+                    st.subheader("Page text:")
 
                     # Create a unique key for the text area
                     text_key = f"text_{st.session_state.page_num}_{method}"
@@ -310,14 +312,14 @@ st.markdown("""
         height: auto;
     }
     
-    .stHeader {
+    /*.stHeader {
         margin-bottom: 1rem;
-    }
+    }*/
 
     /* Style for the download button in sidebar */
     .sidebar .stDownloadButton button {
         width: 100%;
-        margin-top: 0.5rem;
+        /*margin-top: 0.5rem;*/
     }
 </style>
 """, unsafe_allow_html=True)
