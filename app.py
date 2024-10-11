@@ -270,6 +270,14 @@ def main():
             else:
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
 
+    # Add debug information
+    with st.expander("Debug Information", expanded=False):
+        st.write("Session state edited_texts:", st.session_state.edited_texts)
+        st.write("Current page:", st.session_state.page_num)
+        if st.session_state.results:
+            st.write("Number of pages:", len(st.session_state.results))
+            st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))
+
 if __name__ == "__main__":
     main()
 
@@ -297,8 +305,3 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-# Add debug information if needed
-if st.checkbox("Show debug info"):
-    st.write("Session state edited_texts:", st.session_state.edited_texts)
-    st.write("Current page:", st.session_state.page_num)
