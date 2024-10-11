@@ -6,6 +6,10 @@ import string
 import json
 from datetime import datetime
 from PDFProcessor import PDFProcessor
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def get_all_text_data():
     all_data = {
@@ -262,14 +266,15 @@ def main():
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
 
     # Add debug information
-    with st.expander("Debug Information", expanded=False):
-        st.write("Session state edited_texts:", st.session_state.edited_texts)
-        st.write("Current page:", st.session_state.page_num)
-        st.write("Human 1st Page:", st.session_state.first_human_page)
-        st.write("Human Page Number:", st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1)
-        if st.session_state.results:
-            st.write("Number of pages:", len(st.session_state.results))
-            st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))
+    if os.getenv('DEBUG', 'False').lower() in ('true'):
+        with st.expander("Debug Information", expanded=False):
+            st.write("Session state edited_texts:", st.session_state.edited_texts)
+            st.write("Current page:", st.session_state.page_num)
+            st.write("Human 1st Page:", st.session_state.first_human_page)
+            st.write("Human Page Number:", st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1)
+            if st.session_state.results:
+                st.write("Number of pages:", len(st.session_state.results))
+                st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))
 
 if __name__ == "__main__":
     main()
