@@ -6,6 +6,10 @@ from PIL import Image
 import numpy as np
 import re
 import string
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class PDFProcessor:
     def __init__(self):
@@ -84,8 +88,8 @@ class PDFProcessor:
 
     def process_with_pdf2image_tesseract(self, pdf_path):
         results = []
-        pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-        pdf = convert_from_path(pdf_path, poppler_path='D:\\poppler-24.08.0\\Library\\bin')
+        pytesseract.pytesseract.tesseract_cmd = os.getenv('TESSER_ENGINE')
+        pdf = convert_from_path(pdf_path, poppler_path=os.getenv('PDF2IMAGE_ENGINE'))
         for page_num in range(len(pdf)):
             text = pytesseract.image_to_string(pdf[page_num], lang='fas')
             results.append({
@@ -97,7 +101,7 @@ class PDFProcessor:
     def process_with_tesseract(self, pdf_path):
         try:
             results = []
-            pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+            pytesseract.pytesseract.tesseract_cmd = os.getenv('TESSER_ENGINE')
 
             for page_num in range(len(self.doc)):
                 page = self.doc[page_num]
