@@ -251,6 +251,8 @@ def main():
                     # Get the text from edited_texts if it exists, otherwise from result
                     if page_method_key in st.session_state.edited_texts:
                         current_text = st.session_state.edited_texts[page_method_key]
+                        # Show indicator that text has been edited
+                        st.info("This text has been edited. Changes are saved automatically.")
                     else:
                         current_text = result["text"]
                     
