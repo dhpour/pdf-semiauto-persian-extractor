@@ -283,9 +283,10 @@ st.markdown("""
         unicode-bidi: bidi-override !important;
         direction: RTL !important;
         /*height: auto !important;*/
-        min-height: 700px !important;
+        min-height: 900px !important;
         max-height: none !important;
         box-sizing: border-box !important;
+        font-size: 22px;
     }
 
     .stImage img {
