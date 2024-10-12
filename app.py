@@ -220,6 +220,15 @@ def main():
             st.subheader(f"PDF page {st.session_state.page_num}")
 
             zoom_level = st.slider("Zoom (%)", min_value=50, max_value=200, value=st.session_state.zoom_level, step=10, key="zoom_slider")
+            zoom_level = st.number_input(
+                "Page", 
+                min_value=50, 
+                max_value=200,
+                value=st.session_state.zoom_level,
+                step=10,
+                key="zoom_input",
+                #on_change=lambda: setattr(st.session_state, 'page_num', st.session_state.page_input)
+            )
             st.session_state.zoom_level = zoom_level
 
             page = processor.doc.load_page(st.session_state.page_num - 1)
@@ -232,11 +241,70 @@ def main():
 
             # Embed image in custom HTML with JavaScript for zoom control
             custom_html = f"""
-            <div style="width: 100%; overflow: auto;">
-                <img src="data:image/png;base64,{img_base64}" style="width: {zoom_level}%;">
+            <div id="pdf-container" style="width: 100%; height: 600px; overflow: hidden; position: relative;">
+                <img id="pdf-image" src="data:image/png;base64,{img_base64}" style="position: absolute; left: 0; top: 0;">
             </div>
+
+            <script>
+            const container = document.getElementById('pdf-container');
+            const img = document.getElementById('pdf-image');
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+
+            function setImageSize() {{
+                const zoom = {zoom_level} / 100;
+                img.style.width = `${{img.naturalWidth * zoom}}px`;
+                img.style.height = `${{img.naturalHeight * zoom}}px`;
+            }}
+
+            function clamp(value, min, max) {{
+                return Math.min(Math.max(value, min), max);
+            }}
+
+            function updateImagePosition() {{
+                const containerRect = container.getBoundingClientRect();
+                const imgRect = img.getBoundingClientRect();
+
+                translateX = clamp(translateX, containerRect.width - imgRect.width, 0);
+                translateY = clamp(translateY, containerRect.height - imgRect.height, 0);
+
+                img.style.transform = `translate(${{translateX}}px, ${{translateY}}px)`;
+            }}
+
+            container.addEventListener('mousedown', (e) => {{
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                container.style.cursor = 'grabbing';
+            }});
+
+            container.addEventListener('mousemove', (e) => {{
+                if (!isDragging) return;
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateImagePosition();
+            }});
+
+            container.addEventListener('mouseup', () => {{
+                isDragging = false;
+                container.style.cursor = 'grab';
+            }});
+
+            container.addEventListener('mouseleave', () => {{
+                isDragging = false;
+                container.style.cursor = 'grab';
+            }});
+
+            // Prevent default drag behavior
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+
+            // Initial setup
+            setImageSize();
+            updateImagePosition();
+            container.style.cursor = 'grab';
+            </script>
             """
-            st.components.v1.html(custom_html, height=600, scrolling=True)
+            st.components.v1.html(custom_html, height=600, scrolling=False)
 
             #st.image(img_bytes, use_column_width=True)
         
@@ -347,6 +415,16 @@ st.markdown("""
     .sidebar .stDownloadButton button {
         width: 100%;
         /*margin-top: 0.5rem;*/
+    }
+
+    #pdf-container {
+        border: 1px solid #ddd;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    #pdf-image {
+        user-select: none;
+        -webkit-user-drag: none;
     }
 </style>
 """, unsafe_allow_html=True)
