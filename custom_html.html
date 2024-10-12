@@ -1,0 +1,62 @@
+<div id="pdf-container" style="border: 1px solid #999; width: 100%; height: 600px; overflow: hidden; position: relative;">
+    <img id="pdf-image" src="data:image/png;base64,{img_base64}" style="position: absolute; left: 0; top: 0;">
+</div>
+
+<script>
+const container = document.getElementById('pdf-container');
+const img = document.getElementById('pdf-image');
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+
+function setImageSize() {{
+    const zoom = {zoom_level} / 100;
+    img.style.width = `${{img.naturalWidth * zoom}}px`;
+    img.style.height = `${{img.naturalHeight * zoom}}px`;
+}}
+
+function clamp(value, min, max) {{
+    return Math.min(Math.max(value, min), max);
+}}
+
+function updateImagePosition() {{
+    const containerRect = container.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    translateX = clamp(translateX, containerRect.width - imgRect.width, 0);
+    translateY = clamp(translateY, containerRect.height - imgRect.height, 0);
+
+    img.style.transform = `translate(${{translateX}}px, ${{translateY}}px)`;
+}}
+
+container.addEventListener('mousedown', (e) => {{
+    isDragging = true;
+    startX = e.clientX - translateX;
+    startY = e.clientY - translateY;
+    container.style.cursor = 'grabbing';
+}});
+
+container.addEventListener('mousemove', (e) => {{
+    if (!isDragging) return;
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    updateImagePosition();
+}});
+
+container.addEventListener('mouseup', () => {{
+    isDragging = false;
+    container.style.cursor = 'grab';
+}});
+
+container.addEventListener('mouseleave', () => {{
+    isDragging = false;
+    container.style.cursor = 'grab';
+}});
+
+// Prevent default drag behavior
+img.addEventListener('dragstart', (e) => e.preventDefault());
+
+// Initial setup
+setImageSize();
+updateImagePosition();
+container.style.cursor = 'grab';
+</script>
