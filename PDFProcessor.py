@@ -16,8 +16,8 @@ class PDFProcessor:
         self.doctr_model = None
         self.temp_pdf_path = None
         self.doc = None
-        self.latin_digits = "1234567890987654321"
-        self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٩٨٧٦٥٤٣٢١"
+        self.latin_digits = "12345678900987654321"
+        self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٠٩٨٧٦٥٤٣٢١"
         self.repl = str.maketrans(self.farsi_digits, self.latin_digits)
     
     def init_doctr(self):
