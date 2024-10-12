@@ -7,6 +7,9 @@ import json
 from datetime import datetime
 from PDFProcessor import PDFProcessor
 from dotenv import load_dotenv
+import fitz
+import streamlit.components.v1 as components
+import base64
 
 load_dotenv()
 
@@ -119,7 +122,9 @@ def main():
         st.session_state.edited_texts = {}
     if 'first_human_page' not in st.session_state:
         st.session_state.first_human_page = -1
-    
+    if 'zoom_level' not in st.session_state:
+        st.session_state.zoom_level = 100
+
     # Sidebar configuration
     st.sidebar.header("Configuration")
     extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF"] #, "pdf2image/tesseract"]
@@ -213,10 +218,27 @@ def main():
         with right_col:
             #st.header(f"PDF Page {st.session_state.page_num}")
             st.subheader(f"PDF page {st.session_state.page_num}")
+
+            zoom_level = st.slider("Zoom (%)", min_value=50, max_value=200, value=st.session_state.zoom_level, step=10, key="zoom_slider")
+            st.session_state.zoom_level = zoom_level
+
             page = processor.doc.load_page(st.session_state.page_num - 1)
             pix = page.get_pixmap()
+            #pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
             img_bytes = pix.tobytes("png")
-            st.image(img_bytes, use_column_width=True)
+
+            # Convert image bytes to base64 for embedding in HTML
+            img_base64 = base64.b64encode(img_bytes).decode()
+
+            # Embed image in custom HTML with JavaScript for zoom control
+            custom_html = f"""
+            <div style="width: 100%; overflow: auto;">
+                <img src="data:image/png;base64,{img_base64}" style="width: {zoom_level}%;">
+            </div>
+            """
+            st.components.v1.html(custom_html, height=600, scrolling=True)
+
+            #st.image(img_bytes, use_column_width=True)
         
         def update_text(method):
             text_key = f"text_{st.session_state.page_num}_{method}"
@@ -307,9 +329,14 @@ st.markdown("""
         font-size: 22px;
     }
 
-    .stImage img {
-        max-width: 90%;
-        height: auto;
+    .stSlider {
+        padding-bottom: 2rem;
+    }
+    .stImage {
+        margin-top: 1rem;
+    }
+    .element-container {
+        overflow-x: auto;
     }
     
     /*.stHeader {
