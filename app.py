@@ -8,9 +8,8 @@ from datetime import datetime
 from PDFProcessor import PDFProcessor
 from dotenv import load_dotenv
 import fitz
-import streamlit.components.v1 as components
 import base64
-
+from streamlit_tags import st_tags, st_tags_sidebar
 load_dotenv()
 
 
@@ -24,7 +23,12 @@ def get_all_text_data():
         },
         "pages": []
     }
-    
+    if len(st.session_state.keywords) > 0:
+        all_data["metadata"]["keywords"] = st.session_state.keywords
+    if len(st.session_state.ttypes) > 0:
+        all_data["metadata"]["type"] = st.session_state.ttypes
+    if len(st.session_state.pairs) > 0:
+        all_data["metadata"]["pairs"] = st.session_state.pairs
     # Combine original results with edited texts
     for page_num in range(1, st.session_state.total_pages + 1):
         page_data = {
@@ -124,8 +128,13 @@ def main():
         st.session_state.first_human_page = -1
     if 'zoom_level' not in st.session_state:
         st.session_state.zoom_level = 100
+    if 'keywords' not in st.session_state:
+        st.session_state.keywords = []
+    if 'ttypes' not in st.session_state:
+        st.session_state.ttypes = []
+    if 'pairs' not in st.session_state:
+        st.session_state.pairs = []
 
-    # Sidebar configuration
     st.sidebar.header("Configuration")
     extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF"] #, "pdf2image/tesseract"]
     try:
@@ -229,7 +238,7 @@ def main():
                 key="zoom_input",
                 #on_change=lambda: setattr(st.session_state, 'page_num', st.session_state.page_input)
             )
-            st.session_state.zoom_level = zoom_level
+            #st.session_state.zoom_level = zoom_level
 
             page = processor.doc.load_page(st.session_state.page_num - 1)
             pix = page.get_pixmap()
@@ -305,6 +314,33 @@ def main():
                         on_change=update_text,
                         args=(method,)
                     )
+
+                    keywords = st_tags_sidebar(
+                        label='keywords:',
+                        text='Press enter to add more',
+                        #value=st.session_state.keywords,
+                        suggestions=[],
+                        maxtags = 10,
+                        key='keywords_key')
+                    pairs = st_tags_sidebar(
+                        label='pairs:',
+                        text='Press enter to add more',
+                        #value=st.session_state.pairs,
+                        suggestions=[],
+                        maxtags = 10,
+                        key='pairs_key')
+                    ttypes = st_tags_sidebar(
+                        label='type:',
+                        text='Press enter to add more',
+                        #value=st.session_state.ttypes,
+                        suggestions=[],
+                        maxtags = 10,
+                        key='type_key')
+                    
+                    st.session_state.keywords = keywords
+                    st.session_state.pairs = pairs
+                    st.session_state.ttypes = ttypes
+                    
             else:
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
 
@@ -315,6 +351,9 @@ def main():
             st.write("Current page:", st.session_state.page_num)
             st.write("Human 1st Page:", st.session_state.first_human_page)
             st.write("Human Page Number:", st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1)
+            st.write("keywords:", st.session_state.keywords)
+            st.write("pairs:", st.session_state.pairs)
+            st.write("ttypes:", st.session_state.ttypes)
             if st.session_state.results:
                 st.write("Number of pages:", len(st.session_state.results))
                 st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))

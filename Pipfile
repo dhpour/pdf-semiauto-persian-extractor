@@ -7,6 +7,8 @@ name = "pypi"
 pytesseract = "*"
 pdf2image = "*"
 numpy = "*"
+streamlit-tags = "*"
+pdfplumber = "*"
 
 [dev-packages]
 
