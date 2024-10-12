@@ -322,6 +322,7 @@ def main():
                         suggestions=[],
                         maxtags = 10,
                         key='keywords_key')
+                    st.session_state.keywords = keywords
                     pairs = st_tags_sidebar(
                         label='pairs:',
                         text='Press enter to add more',
@@ -329,6 +330,7 @@ def main():
                         suggestions=[],
                         maxtags = 10,
                         key='pairs_key')
+                    st.session_state.pairs = pairs
                     ttypes = st_tags_sidebar(
                         label='type:',
                         text='Press enter to add more',
@@ -336,9 +338,6 @@ def main():
                         suggestions=[],
                         maxtags = 10,
                         key='type_key')
-                    
-                    st.session_state.keywords = keywords
-                    st.session_state.pairs = pairs
                     st.session_state.ttypes = ttypes
                     
             else:
