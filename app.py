@@ -12,6 +12,58 @@ import base64
 from streamlit_tags import st_tags, st_tags_sidebar
 load_dotenv()
 
+def save_session_state():
+    # Collect relevant session state data
+    save_data = {
+        #"page_num": st.session_state.page_num,
+        "results": st.session_state.results,
+        "total_pages": st.session_state.total_pages,
+        "edited_texts": st.session_state.edited_texts,
+        "first_human_page": st.session_state.first_human_page,
+        #"zoom_level": st.session_state.zoom_level,
+        "keywords": st.session_state.keywords,
+        "ttypes": st.session_state.ttypes,
+        "pairs": st.session_state.pairs,
+        "uploaded_filename": st.session_state.get('uploaded_filename', 'Unknown'),
+        "extraction_method": st.session_state.get('extraction_method', 'Unknown'),
+        "save_timestamp": datetime.now().isoformat()
+    }
+    
+    # Convert to JSON and encode
+    json_data = json.dumps(save_data, ensure_ascii=False)
+    encoded_data = base64.b64encode(json_data.encode()).decode()
+    
+    # Create download button
+    st.sidebar.download_button(
+        label="📥 Save Session State",
+        data=json_data, #encoded_data,
+        file_name=f"pdf_extractor_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        mime="application/json",
+    )
+
+def load_session_state():
+    uploaded_file = st.sidebar.file_uploader("Choose a saved session file", type="json", key="session_loader")
+    if uploaded_file is not None:
+        try:
+            # Read the file content
+            file_content = uploaded_file.read().decode('utf-8')
+            
+            # Parse JSON
+            save_data = json.loads(file_content)
+            
+            # Restore session state
+            for key, value in save_data.items():
+                if key != 'save_timestamp':
+                    setattr(st.session_state, key, value)
+            
+            st.sidebar.success(f"Session state loaded successfully! (Saved on: {save_data['save_timestamp']})")
+            
+            # Force a rerun to update the UI
+            st.experimental_rerun()
+        except json.JSONDecodeError as e:
+            st.sidebar.error(f"Error decoding JSON: {str(e)}")
+        except Exception as e:
+            st.sidebar.error(f"Error loading session state: {str(e)}")
 
 def get_all_text_data():
     all_data = {
@@ -219,8 +271,19 @@ def main():
         # Add download button to sidebar
         st.sidebar.markdown("---")
         st.sidebar.header("Export")
-        download_json_button()
+        #download_json_button()
 
+        #st.sidebar.markdown("---")
+        #st.sidebar.subheader("Session Management")
+        
+        # Save button
+        save_session_state()
+        
+        # Load functionality
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("Import")
+        load_session_state()
+        
         # Display content
         left_col, right_col = st.columns([1, 1])
         
@@ -356,6 +419,7 @@ def main():
             if st.session_state.results:
                 st.write("Number of pages:", len(st.session_state.results))
                 st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))
+            st.write("SESSION: ", st.session_state)
 
 if __name__ == "__main__":
     main()
