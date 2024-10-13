@@ -326,27 +326,27 @@ def main():
                         keywords = st_tags_sidebar(
                             label='keywords:',
                             text='Press enter to add more',
-                            #value=st.session_state.keywords,
+                            value=st.session_state.keywords,
                             suggestions=[],
                             maxtags = 10,
-                            key='keywords_key')
-                        st.session_state.keywords = keywords
+                            key='keywords')
+                        #st.session_state.keywords = keywords
                         pairs = st_tags_sidebar(
                             label='pairs:',
                             text='Press enter to add more',
-                            #value=st.session_state.pairs,
+                            value=st.session_state.pairs,
                             suggestions=[],
                             maxtags = 10,
-                            key='pairs_key')
-                        st.session_state.pairs = pairs
+                            key='pairs')
+                        #st.session_state.pairs = pairs
                         ttypes = st_tags_sidebar(
                             label='type:',
                             text='Press enter to add more',
-                            #value=st.session_state.ttypes,
+                            value=st.session_state.ttypes,
                             suggestions=[],
                             maxtags = 10,
-                            key='type_key')
-                        st.session_state.ttypes = ttypes
+                            key='ttypes')
+                        #st.session_state.ttypes = ttypes
                         
                 else:
                     st.warning(f"No text extracted for page {st.session_state.page_num}")
