@@ -65,64 +65,6 @@ def load_session_state():
         except Exception as e:
             st.sidebar.error(f"Error loading session state: {str(e)}")
 
-def get_all_text_data():
-    all_data = {
-        "metadata": {
-            "export_date": datetime.now().isoformat(),
-            "filename": st.session_state.get('uploaded_filename', 'Unknown'),
-            "total_pages": st.session_state.total_pages,
-            "extraction_method": st.session_state.extraction_method
-        },
-        "pages": []
-    }
-    if len(st.session_state.keywords) > 0:
-        all_data["metadata"]["keywords"] = st.session_state.keywords
-    if len(st.session_state.ttypes) > 0:
-        all_data["metadata"]["type"] = st.session_state.ttypes
-    if len(st.session_state.pairs) > 0:
-        all_data["metadata"]["pairs"] = st.session_state.pairs
-    # Combine original results with edited texts
-    for page_num in range(1, st.session_state.total_pages + 1):
-        page_data = {
-            "page_number": page_num,
-            "extractions": []
-        }
-        if st.session_state.first_human_page != -1:
-            page_data['human_page_number'] = page_num - st.session_state.first_human_page + 1 if page_num - st.session_state.first_human_page >= 0 else -1
-        
-        # Get results for this page
-        page_results = [r for r in st.session_state.results if r["page"] == page_num]
-        
-        for result in page_results:
-            method = result["method"]
-            page_method_key = f"{page_num}_{method}"
-            
-            # Use edited text if available, otherwise use original
-            text = st.session_state.edited_texts.get(page_method_key, result["text"])
-            
-            extraction_data = {
-                "method": method,
-                "text": text,
-                "is_edited": page_method_key in st.session_state.edited_texts
-            }
-            page_data["extractions"].append(extraction_data)
-        
-        all_data["pages"].append(page_data)
-    
-    return all_data
-
-def download_json_button():
-    if st.session_state.results:
-        all_data = get_all_text_data()
-        json_str = json.dumps(all_data, ensure_ascii=False, indent=2)
-        
-        st.sidebar.download_button(
-            label="📥 Download Extracted Text (JSON)",
-            data=json_str,
-            file_name=all_data['metadata']['filename'].split('.pdf')[0]+'.json',
-            mime="application/json",
-        )
-
 @st.cache_resource
 def get_processor():
     return PDFProcessor()
