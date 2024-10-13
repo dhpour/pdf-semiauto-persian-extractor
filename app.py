@@ -51,6 +51,11 @@ def load_session_state():
             # Parse JSON
             save_data = json.loads(file_content)
             
+            if st.session_state.total_pages != save_data['total_pages']:
+                st.error(f'JSON and PDF page number not match: {str(save_data['total_pages'])}:{str(st.session_state.total_pages)}')
+            #    uploaded_file = None
+            #    return
+
             # Restore session state
             for key, value in save_data.items():
                 if key != 'save_timestamp':
@@ -170,6 +175,13 @@ def main():
     extraction_method = st.sidebar.radio("Select Extraction Method", extraction_methods)
     
     uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf", key=st.session_state["uploader_pdf_key"])
+
+    pdf_page_number = processor.load_document(processor.temp_pdf_path)
+    if st.session_state.total_pages != 0 and st.session_state.total_pages != pdf_page_number:
+        st.error(f'JSON and PDF page number not match: {str(st.session_state.total_pages)}:{str(pdf_page_number)}')
+    #    uploaded_file = None
+    #else:
+    #    st.session_state.total_pages = pdf_page_number
 
     def parse():
         st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
