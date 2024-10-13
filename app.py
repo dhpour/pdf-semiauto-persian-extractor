@@ -141,7 +141,12 @@ def main():
     extraction_method = st.sidebar.radio("Select Extraction Method", extraction_methods)
     
     uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf")
-    
+
+    def parse():
+        st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
+
+    st.sidebar.button("Parse", on_click=parse)
+
     if uploaded_file is not None:
 
         # Store filename in session state
@@ -162,7 +167,8 @@ def main():
             
             # Load document and process PDF
             st.session_state.total_pages = processor.load_document(processor.temp_pdf_path)
-            st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
+            #if st.session_state.parse_pdf:            
+                #st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
             st.session_state.file_hash = current_file_hash
             st.session_state.extraction_method = extraction_method
         
@@ -220,11 +226,7 @@ def main():
         
         # Save button
         save_session_state()
-        
-        # Load functionality
-        st.sidebar.markdown("---")
-        st.sidebar.subheader("Import")
-        load_session_state()
+
         
         # Display content
         left_col, right_col = st.columns([1, 1])
@@ -280,74 +282,79 @@ def main():
 
         with left_col:
             #st.header("Extracted Text")
-            page_results = [r for r in st.session_state.results if r["page"] == st.session_state.page_num]
-            
-            st.sidebar.button(
-                label="Set current page as 1st human page",
-                on_click=set_human_page
-            )
-            st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
-            st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
-            #st.sidebar.text()
+            if st.session_state.results:
+                page_results = [r for r in st.session_state.results if r["page"] == st.session_state.page_num]
+                
+                st.sidebar.button(
+                    label="Set current page as 1st human page",
+                    on_click=set_human_page
+                )
+                st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
+                st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
+                #st.sidebar.text()
 
-            if page_results:
-                for result in page_results:
-                    method = result["method"]
-                    #st.subheader(f"{method}")
-                    st.subheader("Page text:")
+                if page_results:
+                    for result in page_results:
+                        method = result["method"]
+                        #st.subheader(f"{method}")
+                        st.subheader("Page text:")
 
-                    # Create a unique key for the text area
-                    text_key = f"text_{st.session_state.page_num}_{method}"
-                    page_method_key = f"{st.session_state.page_num}_{method}"
-                    
-                    # Get the text from edited_texts if it exists, otherwise from result
-                    if page_method_key in st.session_state.edited_texts:
-                        current_text = st.session_state.edited_texts[page_method_key]
-                        # Show indicator that text has been edited
-                        st.info("This text has been edited. Changes are saved automatically.")
-                    else:
-                        current_text = result["text"]
-                    
-                    # Update session state
-                    st.session_state[text_key] = current_text
-                    
-                    # Display the text area
-                    edited_text = st.text_area(
-                        f"Edit text if needed",
-                        value=current_text,
-                        key=text_key,
-                        on_change=update_text,
-                        args=(method,)
-                    )
+                        # Create a unique key for the text area
+                        text_key = f"text_{st.session_state.page_num}_{method}"
+                        page_method_key = f"{st.session_state.page_num}_{method}"
+                        
+                        # Get the text from edited_texts if it exists, otherwise from result
+                        if page_method_key in st.session_state.edited_texts:
+                            current_text = st.session_state.edited_texts[page_method_key]
+                            # Show indicator that text has been edited
+                            st.info("This text has been edited. Changes are saved automatically.")
+                        else:
+                            current_text = result["text"]
+                        
+                        # Update session state
+                        st.session_state[text_key] = current_text
+                        
+                        # Display the text area
+                        edited_text = st.text_area(
+                            f"Edit text if needed",
+                            value=current_text,
+                            key=text_key,
+                            on_change=update_text,
+                            args=(method,)
+                        )
 
-                    keywords = st_tags_sidebar(
-                        label='keywords:',
-                        text='Press enter to add more',
-                        #value=st.session_state.keywords,
-                        suggestions=[],
-                        maxtags = 10,
-                        key='keywords_key')
-                    st.session_state.keywords = keywords
-                    pairs = st_tags_sidebar(
-                        label='pairs:',
-                        text='Press enter to add more',
-                        #value=st.session_state.pairs,
-                        suggestions=[],
-                        maxtags = 10,
-                        key='pairs_key')
-                    st.session_state.pairs = pairs
-                    ttypes = st_tags_sidebar(
-                        label='type:',
-                        text='Press enter to add more',
-                        #value=st.session_state.ttypes,
-                        suggestions=[],
-                        maxtags = 10,
-                        key='type_key')
-                    st.session_state.ttypes = ttypes
-                    
-            else:
-                st.warning(f"No text extracted for page {st.session_state.page_num}")
+                        keywords = st_tags_sidebar(
+                            label='keywords:',
+                            text='Press enter to add more',
+                            #value=st.session_state.keywords,
+                            suggestions=[],
+                            maxtags = 10,
+                            key='keywords_key')
+                        st.session_state.keywords = keywords
+                        pairs = st_tags_sidebar(
+                            label='pairs:',
+                            text='Press enter to add more',
+                            #value=st.session_state.pairs,
+                            suggestions=[],
+                            maxtags = 10,
+                            key='pairs_key')
+                        st.session_state.pairs = pairs
+                        ttypes = st_tags_sidebar(
+                            label='type:',
+                            text='Press enter to add more',
+                            #value=st.session_state.ttypes,
+                            suggestions=[],
+                            maxtags = 10,
+                            key='type_key')
+                        st.session_state.ttypes = ttypes
+                        
+                else:
+                    st.warning(f"No text extracted for page {st.session_state.page_num}")
 
+     # Load functionality
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Import JSON")
+    load_session_state()
     # Add debug information
     if os.getenv('DEBUG', 'False').lower() in ('true'):
         with st.expander("Debug Information", expanded=False):
