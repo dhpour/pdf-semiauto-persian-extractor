@@ -51,7 +51,7 @@ def load_session_state():
             # Parse JSON
             save_data = json.loads(file_content)
             
-            if st.session_state.total_pages != save_data['total_pages']:
+            if st.session_state.total_pages != 0 and st.session_state.total_pages != save_data['total_pages']:
                 st.error(f'JSON and PDF page number not match: {str(save_data['total_pages'])}:{str(st.session_state.total_pages)}')
             #    uploaded_file = None
             #    return
@@ -64,7 +64,7 @@ def load_session_state():
             st.sidebar.success(f"Session state loaded successfully! (Saved on: {save_data['save_timestamp']})")
             
             # Force a rerun to update the UI
-            #st.experimental_rerun()
+            #st.rerun()
         except json.JSONDecodeError as e:
             st.sidebar.error(f"Error decoding JSON: {str(e)}")
         except Exception as e:
