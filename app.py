@@ -59,7 +59,7 @@ def load_session_state():
             st.sidebar.success(f"Session state loaded successfully! (Saved on: {save_data['save_timestamp']})")
             
             # Force a rerun to update the UI
-            st.experimental_rerun()
+            #st.experimental_rerun()
         except json.JSONDecodeError as e:
             st.sidebar.error(f"Error decoding JSON: {str(e)}")
         except Exception as e:
