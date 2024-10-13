@@ -42,7 +42,7 @@ def save_session_state():
     )
 
 def load_session_state():
-    uploaded_file = st.sidebar.file_uploader("Choose a saved session file", type="json", key="session_loader")
+    uploaded_file = st.sidebar.file_uploader("Choose a saved session file", type="json", key=st.session_state["uploader_json_key"])
     if uploaded_file is not None:
         try:
             # Read the file content
@@ -102,13 +102,25 @@ def process_pdf(processor, pdf_path, extraction_method):
             r["method"] = "tesseract"
         results.extend(tesser_results)
     return results
-
+def reset_session():
+    st.session_state.page_num = 1
+    st.session_state.results = None
+    st.session_state.total_pages = 0
+    st.session_state.edited_texts = {}
+    st.session_state.first_human_page = -1
+    st.session_state.zoom_level = 100
+    st.session_state.keywords = []
+    st.session_state.ttypes = []
+    st.session_state.pairs = []
+    st.session_state["uploader_pdf_key"] = 1
+    st.session_state["uploader_json_key"] = 1000
+    
 def main():
     st.set_page_config(layout="wide")
     st.title("PDF Content Extractor")
     
     processor = get_processor()
-    
+
     # Initialize session states
     if 'page_num' not in st.session_state:
         st.session_state.page_num = 1
@@ -128,7 +140,24 @@ def main():
         st.session_state.ttypes = []
     if 'pairs' not in st.session_state:
         st.session_state.pairs = []
+    if "uploader_pdf_key" not in st.session_state:
+        st.session_state["uploader_pdf_key"] = 1
+    if "uploader_json_key" not in st.session_state:
+        st.session_state["uploader_json_key"] = 1000
 
+    def reset():
+        reset_session()
+        #for key in st.session_state.keys():
+            #del st.session_state[key]
+        #processor = get_processor()
+        st.session_state["uploader_pdf_key"] += 1
+        st.session_state["uploader_json_key"] += 1
+        #st.cache_data.clear()
+        
+
+        st.rerun()
+
+    st.sidebar.button("New Project", on_click=reset)
     st.sidebar.header("Configuration")
     extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF"] #, "pdf2image/tesseract"]
     try:
@@ -140,7 +169,7 @@ def main():
     
     extraction_method = st.sidebar.radio("Select Extraction Method", extraction_methods)
     
-    uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf")
+    uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf", key=st.session_state["uploader_pdf_key"])
 
     def parse():
         st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
