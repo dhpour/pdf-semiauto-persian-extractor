@@ -8,7 +8,7 @@ features
 - Multi library for text and OCR.
 - Compatible with Persian (and Arabic) right to left scripts.
 
-run
+usage
 ---
 `streamlit run app.py`
 
