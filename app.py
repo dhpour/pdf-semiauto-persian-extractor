@@ -37,7 +37,7 @@ def save_session_state():
     st.sidebar.download_button(
         label="📥 Save Session State",
         data=json_data, #encoded_data,
-        file_name=f"pdf_extractor_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        file_name=f"{st.session_state.get('uploaded_filename', 'Unknown').split('.pdf')[0]}.json",
         mime="application/json",
     )
 
