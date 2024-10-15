@@ -105,7 +105,7 @@ class PDFProcessor:
 
             for page_num in range(len(self.doc)):
                 page = self.doc[page_num]
-                pix = page.get_pixmap()
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
                 
                 # Convert PyMuPDF pixmap to PIL Image
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)

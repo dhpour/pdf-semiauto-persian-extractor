@@ -289,8 +289,8 @@ def main():
             #st.session_state.zoom_level = zoom_level
 
             page = processor.doc.load_page(st.session_state.page_num - 1)
-            pix = page.get_pixmap()
-            #pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+            #pix = page.get_pixmap()
+            pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
             img_bytes = pix.tobytes("png")
 
             # Convert image bytes to base64 for embedding in HTML
