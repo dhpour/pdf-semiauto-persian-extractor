@@ -109,7 +109,7 @@ def process_pdf(processor, pdf_path, extraction_method):
     return results
 def reset_session():
     st.session_state.page_num = 1
-    st.session_state.results = None
+    st.session_state.results = []
     st.session_state.total_pages = 0
     st.session_state.edited_texts = {}
     st.session_state.first_human_page = -1
@@ -130,7 +130,7 @@ def main():
     if 'page_num' not in st.session_state:
         st.session_state.page_num = 1
     if 'results' not in st.session_state:
-        st.session_state.results = None
+        st.session_state.results = []
     if 'total_pages' not in st.session_state:
         st.session_state.total_pages = 0
     if 'edited_texts' not in st.session_state:
@@ -186,7 +186,7 @@ def main():
     #    st.session_state.total_pages = pdf_page_number
 
     def parse():
-        st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
+        st.session_state.results += process_pdf(processor, processor.temp_pdf_path, extraction_method)
 
     st.sidebar.button("Parse", on_click=parse)
 
@@ -314,12 +314,6 @@ def main():
             # Only update if the text has actually changed
             if page_key not in st.session_state.edited_texts or st.session_state.edited_texts[page_key] != new_text:
                 st.session_state.edited_texts[page_key] = new_text
-                # Update the results list for consistency
-                if st.session_state.results:
-                    for result in st.session_state.results:
-                        if result["page"] == st.session_state.page_num:
-                            result["text"] = new_text
-                            break
 
         def get_current_page_text():
             page_key = f"{st.session_state.page_num}"
@@ -329,7 +323,7 @@ def main():
 
             if st.session_state.results:
                 for page in st.session_state.results:
-                    if page['page'] == st.session_state.page_num:
+                    if page['page'] == st.session_state.page_num and page['method'] == extraction_method:
                         return page['text']
             return "No text available"
 
