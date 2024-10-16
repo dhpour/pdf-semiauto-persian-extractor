@@ -123,6 +123,24 @@ class PDFProcessor:
         except Exception as e:
             return [{"page": 1, "text": f"Error processing with Tesseract: {str(e)}"}]
 
+    def parse_single_page(self, page, method):
+        
+        page = page - 1
+        if method == "pdfplumber":
+            with pdfplumber.open(self.temp_pdf_path) as pdf:
+                return self.adjust_plumber_text(pdf.pages[page].extract_text())
+
+        elif method == "PyMuPDF":
+            p = self.doc[page]
+            return self.justifies_lefties(p.get_text())
+
+        elif method == "tesseract":
+            pytesseract.pytesseract.tesseract_cmd = os.getenv('TESSER_ENGINE')
+            p = self.doc[page]
+            pix = p.get_pixmap(matrix=fitz.Matrix(2, 2))
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            return pytesseract.image_to_string(img, lang='fas+ara')
+    
     def cleanup(self):
         if self.doc:
             self.doc.close()

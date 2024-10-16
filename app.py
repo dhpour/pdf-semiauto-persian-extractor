@@ -119,7 +119,8 @@ def reset_session():
     st.session_state.pairs = []
     st.session_state["uploader_pdf_key"] = 1
     st.session_state["uploader_json_key"] = 1000
-    
+    st.session_state["parse_page"] = False
+
 def main():
     st.set_page_config(layout="wide")
     st.title("PDF Content Extractor")
@@ -151,9 +152,11 @@ def main():
         st.session_state["uploader_json_key"] = 1000
     if 'debug_counter' not in st.session_state:
         st.session_state.debug_counter = 0
+    if "parse_page" not in st.session_state:
+        st.session_state["parse_page"] = False
 
     def reset():
-        #reset_session()
+        reset_session()
         #for key in st.session_state.keys():
             #del st.session_state[key]
         #processor = get_processor()
@@ -188,7 +191,19 @@ def main():
     def parse():
         st.session_state.results += process_pdf(processor, processor.temp_pdf_path, extraction_method)
 
+    def parse_page():
+        print('going to parse page', st.session_state.page_num)
+        p = processor.parse_single_page(st.session_state.page_num, extraction_method)
+        #print(p)
+        st.session_state.results.append({
+            "page": st.session_state.page_num,
+            "method": extraction_method,
+            "text": p
+        })
     st.sidebar.button("Parse", on_click=parse)
+
+    if st.session_state["parse_page"] or True:
+        st.sidebar.button("Parse page", on_click=parse_page)
 
     if uploaded_file is not None:
 
@@ -319,12 +334,16 @@ def main():
             page_key = f"{st.session_state.page_num}"
 
             if page_key in st.session_state.edited_texts:
+                #st.session_state["parse_page"] = False
                 return st.session_state.edited_texts[page_key]
 
             if st.session_state.results:
                 for page in st.session_state.results:
                     if page['page'] == st.session_state.page_num and page['method'] == extraction_method:
+                        st.session_state["parse_page"] = False
                         return page['text']
+
+            st.session_state["parse_page"] = True
             return "No text available"
 
         def set_human_page():
