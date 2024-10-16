@@ -64,7 +64,7 @@ def load_session_state():
                 st.sidebar.success(f"Session state loaded successfully! (Saved on: {save_data['save_timestamp']})")
                 
                 # Force a rerun to update the UI
-                st.rerun()
+                #st.rerun()
         except json.JSONDecodeError as e:
             st.sidebar.error(f"Error decoding JSON: {str(e)}")
         except Exception as e:
@@ -149,9 +149,11 @@ def main():
         st.session_state["uploader_pdf_key"] = 1
     if "uploader_json_key" not in st.session_state:
         st.session_state["uploader_json_key"] = 1000
+    if 'debug_counter' not in st.session_state:
+        st.session_state.debug_counter = 0
 
     def reset():
-        reset_session()
+        #reset_session()
         #for key in st.session_state.keys():
             #del st.session_state[key]
         #processor = get_processor()
@@ -305,17 +307,31 @@ def main():
 
             #st.image(img_bytes, use_column_width=True)
         
-        def update_text(method):
-            text_key = f"text_{st.session_state.page_num}_{method}"
-            # Update the edited_texts dictionary with the new text
-            page_method_key = f"{st.session_state.page_num}_{method}"
-            st.session_state.edited_texts[page_method_key] = st.session_state[text_key]
+        def update_text(text_key):
+            page_key = str(st.session_state.page_num)
+            new_text = st.session_state[text_key]
             
-            # Also update the results list for consistency
-            for result in st.session_state.results:
-                if result["page"] == st.session_state.page_num and result["method"] == method:
-                    result["text"] = st.session_state[text_key]
-                    break
+            # Only update if the text has actually changed
+            if page_key not in st.session_state.edited_texts or st.session_state.edited_texts[page_key] != new_text:
+                st.session_state.edited_texts[page_key] = new_text
+                # Update the results list for consistency
+                if st.session_state.results:
+                    for result in st.session_state.results:
+                        if result["page"] == st.session_state.page_num:
+                            result["text"] = new_text
+                            break
+
+        def get_current_page_text():
+            page_key = f"{st.session_state.page_num}"
+
+            if page_key in st.session_state.edited_texts:
+                return st.session_state.edited_texts[page_key]
+
+            if st.session_state.results:
+                for page in st.session_state.results:
+                    if page['page'] == st.session_state.page_num:
+                        return page['text']
+            return "No text available"
 
         def set_human_page():
             st.session_state.first_human_page = st.session_state.page_num
@@ -323,74 +339,67 @@ def main():
 
         with left_col:
             #st.header("Extracted Text")
-            if st.session_state.results:
-                page_results = [r for r in st.session_state.results if r["page"] == st.session_state.page_num]
-                
+            st.subheader("Page text:")
+            
+            text_key = f"cached_page_{st.session_state.page_num}"
+
+            current_text = get_current_page_text()
+
+             # Update session state with current text
+            st.session_state[text_key] = current_text
+
+            page_key = f"{st.session_state.page_num}"
+
+            if page_key in st.session_state.edited_texts:
+                #current_text = st.session_state.edited_texts[page_key]
+                # Show indicator that text has been edited
+                st.info("This text has been edited. Changes are saved automatically.")
+
+
+            # Display the text area
+            edited_text = st.text_area(
+                f"Edit text if needed",
+                value=current_text,
+                key=f"cached_page_{st.session_state.page_num}",
+                on_change=update_text,
+                args=(text_key,)
+            )
+            #st.session_state.edited_texts[page_key] = edited_text
+            if st.session_state.results:               
                 st.sidebar.button(
                     label="Set current page as 1st human page",
                     on_click=set_human_page
                 )
                 st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
                 st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
-                #st.sidebar.text()
+            else:
+                st.warning(f"No text extracted for page {st.session_state.page_num}")
 
-                if page_results:
-                    for result in page_results:
-                        method = result["method"]
-                        #st.subheader(f"{method}")
-                        st.subheader("Page text:")
+            keywords = st_tags_sidebar(
+                label='keywords:',
+                text='Press enter to add more',
+                value=st.session_state.keywords,
+                suggestions=[],
+                maxtags = 10,
+                key='keywords')
+            #st.session_state.keywords = keywords
+            pairs = st_tags_sidebar(
+                label='pairs:',
+                text='Press enter to add more',
+                value=st.session_state.pairs,
+                suggestions=[],
+                maxtags = 10,
+                key='pairs')
+            #st.session_state.pairs = pairs
+            ttypes = st_tags_sidebar(
+                label='type:',
+                text='Press enter to add more',
+                value=st.session_state.ttypes,
+                suggestions=[],
+                maxtags = 10,
+                key='ttypes')
+            #st.session_state.ttypes = ttypes
 
-                        # Create a unique key for the text area
-                        text_key = f"text_{st.session_state.page_num}_{method}"
-                        page_method_key = f"{st.session_state.page_num}_{method}"
-                        
-                        # Get the text from edited_texts if it exists, otherwise from result
-                        if page_method_key in st.session_state.edited_texts:
-                            current_text = st.session_state.edited_texts[page_method_key]
-                            # Show indicator that text has been edited
-                            st.info("This text has been edited. Changes are saved automatically.")
-                        else:
-                            current_text = result["text"]
-                        
-                        # Update session state
-                        st.session_state[text_key] = current_text
-                        
-                        # Display the text area
-                        edited_text = st.text_area(
-                            f"Edit text if needed",
-                            value=current_text,
-                            key=text_key,
-                            on_change=update_text,
-                            args=(method,)
-                        )
-
-                        keywords = st_tags_sidebar(
-                            label='keywords:',
-                            text='Press enter to add more',
-                            value=st.session_state.keywords,
-                            suggestions=[],
-                            maxtags = 10,
-                            key='keywords')
-                        #st.session_state.keywords = keywords
-                        pairs = st_tags_sidebar(
-                            label='pairs:',
-                            text='Press enter to add more',
-                            value=st.session_state.pairs,
-                            suggestions=[],
-                            maxtags = 10,
-                            key='pairs')
-                        #st.session_state.pairs = pairs
-                        ttypes = st_tags_sidebar(
-                            label='type:',
-                            text='Press enter to add more',
-                            value=st.session_state.ttypes,
-                            suggestions=[],
-                            maxtags = 10,
-                            key='ttypes')
-                        #st.session_state.ttypes = ttypes
-                        
-                else:
-                    st.warning(f"No text extracted for page {st.session_state.page_num}")
 
      # Load functionality
     st.sidebar.markdown("---")
@@ -398,17 +407,9 @@ def main():
     load_session_state()
     # Add debug information
     if os.getenv('DEBUG', 'False').lower() in ('true'):
-        with st.expander("Debug Information", expanded=False):
-            st.write("Session state edited_texts:", st.session_state.edited_texts)
-            st.write("Current page:", st.session_state.page_num)
-            st.write("Human 1st Page:", st.session_state.first_human_page)
-            st.write("Human Page Number:", st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1)
-            st.write("keywords:", st.session_state.keywords)
-            st.write("pairs:", st.session_state.pairs)
-            st.write("ttypes:", st.session_state.ttypes)
-            if st.session_state.results:
-                st.write("Number of pages:", len(st.session_state.results))
-                st.write("Available methods:", list(set(r["method"] for r in st.session_state.results)))
+        with st.expander("Debug Information", expanded=True):
+            st.session_state.debug_counter += 1
+            st.write("COUNTER: ", st.session_state.debug_counter)
             st.write("SESSION: ", st.session_state)
 
 if __name__ == "__main__":
