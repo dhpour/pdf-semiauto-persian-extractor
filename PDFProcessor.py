@@ -52,7 +52,7 @@ class PDFProcessor:
                 text = page.extract_text()
                 results.append({
                     "page": page_num + 1,
-                    "text": self.adjust_plumber_text(text) if text else "No text extracted"
+                    "text": text #self.adjust_plumber_text(text) if text else "No text extracted"
                 })
         print('pages: ', len(results))
         return results
@@ -64,7 +64,7 @@ class PDFProcessor:
             text = page.get_text()
             results.append({
                 "page": page_num + 1,
-                "text": self.justifies_lefties(text) if text else "No text extracted"
+                "text": text #self.justifies_lefties(text) if text else "No text extracted"
             })
         return results
     
