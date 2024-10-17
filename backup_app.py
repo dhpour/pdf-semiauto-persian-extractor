@@ -25,7 +25,7 @@ def save_session_state():
         "ttypes": st.session_state.ttypes,
         "pairs": st.session_state.pairs,
         "uploaded_filename": st.session_state.get('uploaded_filename', 'Unknown'),
-        #"extraction_method": st.session_state.get('extraction_method', 'Unknown'),
+        "extraction_method": st.session_state.get('extraction_method', 'Unknown'),
         "save_timestamp": datetime.now().isoformat()
     }
     
@@ -95,36 +95,6 @@ def reset_session():
 def main():
     st.set_page_config(layout="wide")
 
-    # Initialize session states
-    if 'page_num' not in st.session_state:
-        st.session_state.page_num = 1
-    if 'results' not in st.session_state:
-        st.session_state.results = []
-    if 'total_pages' not in st.session_state:
-        st.session_state.total_pages = 0
-    if 'edited_texts' not in st.session_state:
-        st.session_state.edited_texts = {}
-    if 'first_human_page' not in st.session_state:
-        st.session_state.first_human_page = -1
-    if 'zoom_level' not in st.session_state:
-        st.session_state.zoom_level = 100
-    if 'keywords' not in st.session_state:
-        st.session_state.keywords = []
-    if 'ttypes' not in st.session_state:
-        st.session_state.ttypes = []
-    if 'pairs' not in st.session_state:
-        st.session_state.pairs = []
-    if "uploader_pdf_key" not in st.session_state:
-        st.session_state["uploader_pdf_key"] = 1
-    if "uploader_json_key" not in st.session_state:
-        st.session_state["uploader_json_key"] = 1000
-    if 'debug_counter' not in st.session_state:
-        st.session_state.debug_counter = 0
-    if "parse_page" not in st.session_state:
-        st.session_state["parse_page"] = False
-
-    processor = get_processor()
-
     # Create the main navigation menu in the sidebar
     with st.sidebar:
         with st.expander("📁 File Operations", expanded=True):
@@ -153,7 +123,7 @@ def main():
                             st.error(f'JSON and PDF page number not match: {str(save_data["total_pages"])}:{str(st.session_state.get("total_pages", 0))}')
                         else:
                             for key, value in save_data.items():
-                                if key not in ['save_timestamp', "extraction_method"]:
+                                if key != 'save_timestamp':
                                     setattr(st.session_state, key, value)
                             st.success(f"Session loaded successfully! (Saved on: {save_data['save_timestamp']})")
                     except Exception as e:
@@ -164,9 +134,38 @@ def main():
         st.markdown("---")
     st.title("PDF Content Extractor")
     
-    
+    processor = get_processor()
+
+    # Initialize session states
+    if 'page_num' not in st.session_state:
+        st.session_state.page_num = 1
+    if 'results' not in st.session_state:
+        st.session_state.results = []
+    if 'total_pages' not in st.session_state:
+        st.session_state.total_pages = 0
+    if 'edited_texts' not in st.session_state:
+        st.session_state.edited_texts = {}
+    if 'first_human_page' not in st.session_state:
+        st.session_state.first_human_page = -1
+    if 'zoom_level' not in st.session_state:
+        st.session_state.zoom_level = 100
+    if 'keywords' not in st.session_state:
+        st.session_state.keywords = []
+    if 'ttypes' not in st.session_state:
+        st.session_state.ttypes = []
+    if 'pairs' not in st.session_state:
+        st.session_state.pairs = []
+    if "uploader_pdf_key" not in st.session_state:
+        st.session_state["uploader_pdf_key"] = 1
+    if "uploader_json_key" not in st.session_state:
+        st.session_state["uploader_json_key"] = 1000
+    if 'debug_counter' not in st.session_state:
+        st.session_state.debug_counter = 0
+    if "parse_page" not in st.session_state:
+        st.session_state["parse_page"] = False
+
     def reset():
-        #reset_session()
+        reset_session()
         #for key in st.session_state.keys():
             #del st.session_state[key]
         #processor = get_processor()
@@ -202,16 +201,15 @@ def main():
         st.session_state.results += process_pdf(processor, processor.temp_pdf_path, extraction_method)
 
     def parse_page():
-        #print('going to parse page', st.session_state.page_num)
+        print('going to parse page', st.session_state.page_num)
         p = processor.parse_single_page(st.session_state.page_num, extraction_method)
         record = {
             "page": st.session_state.page_num,
             "method": extraction_method,
             "text": p
         }
-        #print(record)
+        print(record)
         st.session_state.results.append(record)
-        #st.session_state[f"cached_page_{st.session_state.page_num}"] = p
     st.sidebar.button("Parse", on_click=parse)
 
     if st.session_state["parse_page"] or True:
@@ -356,7 +354,7 @@ def main():
                         return page['text']
 
             st.session_state["parse_page"] = True
-            return "No text available"
+            return
 
         def set_human_page():
             st.session_state.first_human_page = st.session_state.page_num
