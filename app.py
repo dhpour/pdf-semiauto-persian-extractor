@@ -373,19 +373,11 @@ def main():
             #st.image(img_bytes, use_column_width=True)
         
         def update_text(text_key):
-            print('text_key: ', text_key)
-            page_num = int(text_key.split('_')[-1])
-            page_key = str(st.session_state.page_num)
+            page_num = st.session_state.page_num
             new_text = st.session_state[text_key]
-            print('page_num: ', page_num)
-            print('page_key: ', page_key)
-            print('RRENT: ', current_text)
-            #print('page_num: ', page_num)
             
-            # Only update if the text has actually changed
-            if page_key not in st.session_state.edited_texts or st.session_state.edited_texts[page_key] != new_text:
-                st.session_state.edited_texts[str(page_num)] = new_text
-                st.session_state[text_key] = new_text
+            # Always update the edited_texts dictionary when text changes
+            st.session_state.edited_texts[str(page_num)] = new_text
 
         def get_current_page_text():
             page_key = f"{st.session_state.page_num}"
@@ -411,12 +403,13 @@ def main():
             #st.header("Extracted Text")
             st.subheader("Page text:")
             
-            text_key = f"cached_page_{st.session_state.page_num}"
+            text_key = f"page_text_{st.session_state.page_num}"
 
             current_text = get_current_page_text()
 
-             # Update session state with current text
-            st.session_state[text_key] = current_text
+            # Update session state with current text
+            if text_key not in st.session_state:
+                st.session_state[text_key] = current_text
 
             page_key = f"{st.session_state.page_num}"
 
@@ -430,11 +423,17 @@ def main():
             edited_text = st.text_area(
                 f"Edit text if needed",
                 value=current_text,
-                key=f"cached_page_{st.session_state.page_num}",
+                key=text_key,
                 #key="page_text_edited",
                 on_change=update_text,
                 args=(text_key,)
             )
+            if st.button('Save Changes'):
+                print('edited: ', edited_text)
+                print('text_key: ', st.session_state[text_key])
+                print('page_key: ', st.session_state.edited_texts[page_key])
+                #st.session_state[text_key] = edited_text
+                #st.session_state.edited_texts[page_key] = st.session_state[text_key]
             #st.session_state.edited_texts[page_key] = edited_text
             if st.session_state.results:               
                 st.sidebar.button(
