@@ -26,7 +26,11 @@ def save_session_state():
         "pairs": st.session_state.pairs,
         "uploaded_filename": st.session_state.get('uploaded_filename', 'Unknown'),
         #"extraction_method": st.session_state.get('extraction_method', 'Unknown'),
-        "save_timestamp": datetime.now().isoformat()
+        "save_timestamp": datetime.now().isoformat(),
+        #"cached_pages": {
+            #k: v for k, v in st.session_state.items() 
+            #if k.startswith("cached_page_")
+        #}
     }
     
     # Convert to JSON and encode
@@ -92,6 +96,51 @@ def reset_session():
     st.session_state["uploader_json_key"] = 1000
     st.session_state["parse_page"] = False
 
+def load_json_state(file_content):
+    try:
+        save_data = json.loads(file_content)
+        
+        # First verify total pages match
+        if (st.session_state.get('total_pages', 0) != 0 and 
+            st.session_state.get('total_pages', 0) != save_data['total_pages']):
+            st.error(f'JSON and PDF page number not match: {str(save_data["total_pages"])}:{str(st.session_state.get("total_pages", 0))}')
+            return False
+            
+        # Restore basic session state
+        for key, value in save_data.items():
+            if key not in ['save_timestamp', "extraction_method", "cached_pages", "total_pages", "first_human_page", "edited_texts", "results"]:
+                #setattr(st.session_state, key, value)
+                st.session_state[key] = value
+            if key == 'results' and len(st.session_state.results) == 0:
+                for p in save_data[key]:
+                    st.session_state.results.append(p)
+            if key == 'edited_texts':
+                for k, v in save_data[key].items():
+                    print('edited_texts ', type(k), v)
+                    st.session_state[key][k] = v
+        
+        # Restore cached pages
+        #if "cached_pages" in save_data:
+            #for cache_key, cache_value in save_data["cached_pages"].items():
+                #st.session_state[cache_key] = cache_value
+        # Clear existing cached pages
+
+        #keys_to_remove = [key for key in st.session_state.keys() if key.startswith("cached_page_")]
+        #for key in keys_to_remove:
+        #    del st.session_state[key]
+
+        #for page in st.session_state.results:
+        #    if st.session_state.page_num - 1  == page['page']:
+        #        st.session_state[f"cached_page_{st.session_state.page_num-1}"] = page['text']
+        #    elif st.session_state.page_num  == page['page']:
+        #        st.session_state[f"cached_page_{st.session_state.page_num}"] = page['text']
+                
+        st.success(f"Session loaded successfully! (Saved on: {save_data['save_timestamp']})")
+        return True
+    except Exception as e:
+        st.error(f"Error loading session state: {str(e)}")
+        return False
+
 def main():
     st.set_page_config(layout="wide")
 
@@ -145,21 +194,10 @@ def main():
                     key=st.session_state.get("uploader_json_key", 1000)
                 )
                 if uploaded_json is not None:
-                    try:
-                        file_content = uploaded_json.read().decode('utf-8')
-                        save_data = json.loads(file_content)
-                        
-                        if st.session_state.get('total_pages', 0) != 0 and st.session_state.get('total_pages', 0) != save_data['total_pages']:
-                            st.error(f'JSON and PDF page number not match: {str(save_data["total_pages"])}:{str(st.session_state.get("total_pages", 0))}')
-                        else:
-                            for key, value in save_data.items():
-                                if key not in ['save_timestamp', "extraction_method"]:
-                                    setattr(st.session_state, key, value)
-                            st.success(f"Session loaded successfully! (Saved on: {save_data['save_timestamp']})")
-                    except Exception as e:
-                        st.error(f"Error loading session state: {str(e)}")
-                    except json.JSONDecodeError as e:
-                        st.sidebar.error(f"Error decoding JSON: {str(e)}")
+                    file_content = uploaded_json.read().decode('utf-8')
+                    load_json_state(file_content)
+                    #if load_json_state(file_content):
+                        #st.rerun()
 
         st.markdown("---")
     st.title("PDF Content Extractor")
@@ -335,12 +373,19 @@ def main():
             #st.image(img_bytes, use_column_width=True)
         
         def update_text(text_key):
+            print('text_key: ', text_key)
+            page_num = int(text_key.split('_')[-1])
             page_key = str(st.session_state.page_num)
             new_text = st.session_state[text_key]
+            print('page_num: ', page_num)
+            print('page_key: ', page_key)
+            print('RRENT: ', current_text)
+            #print('page_num: ', page_num)
             
             # Only update if the text has actually changed
             if page_key not in st.session_state.edited_texts or st.session_state.edited_texts[page_key] != new_text:
-                st.session_state.edited_texts[page_key] = new_text
+                st.session_state.edited_texts[str(page_num)] = new_text
+                st.session_state[text_key] = new_text
 
         def get_current_page_text():
             page_key = f"{st.session_state.page_num}"
@@ -386,6 +431,7 @@ def main():
                 f"Edit text if needed",
                 value=current_text,
                 key=f"cached_page_{st.session_state.page_num}",
+                #key="page_text_edited",
                 on_change=update_text,
                 args=(text_key,)
             )
