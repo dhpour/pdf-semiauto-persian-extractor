@@ -23,7 +23,7 @@ def save_session_state():
         #"zoom_level": st.session_state.zoom_level,
         "keywords": st.session_state.keywords,
         "ttypes": st.session_state.ttypes,
-        "pairs": st.session_state.pairs,
+        "ppairs": st.session_state.ppairs,
         "uploaded_filename": st.session_state.get('uploaded_filename', 'Unknown'),
         #"extraction_method": st.session_state.get('extraction_method', 'Unknown'),
         "save_timestamp": datetime.now().isoformat(),
@@ -91,7 +91,7 @@ def reset_session():
     st.session_state.zoom_level = 100
     st.session_state.keywords = []
     st.session_state.ttypes = []
-    st.session_state.pairs = []
+    st.session_state.ppairs = []
     st.session_state["uploader_pdf_key"] = 1
     st.session_state["uploader_json_key"] = 1000
     st.session_state["parse_page"] = False
@@ -108,7 +108,7 @@ def load_json_state(file_content):
             
         # Restore basic session state
         for key, value in save_data.items():
-            if key not in ['save_timestamp', "extraction_method", "cached_pages", "total_pages", "first_human_page", "edited_texts", "results"]:
+            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "results", "keywords", "ppairs", "ttypes"]:
                 #setattr(st.session_state, key, value)
                 st.session_state[key] = value
             if key == 'results' and len(st.session_state.results) == 0:
@@ -118,6 +118,15 @@ def load_json_state(file_content):
                 for k, v in save_data[key].items():
                     print('edited_texts ', type(k), v)
                     st.session_state[key][k] = v
+            if key == 'keywords':
+                for kw in save_data[key]:
+                    st.session_state[key].append(kw)
+            if key == 'ppairs':
+                for kw in save_data[key]:
+                    st.session_state[key].append(kw)
+            if key == 'ttypes':
+                for kw in save_data[key]:
+                    st.session_state[key].append(kw)
         
         # Restore cached pages
         #if "cached_pages" in save_data:
@@ -161,8 +170,8 @@ def main():
         st.session_state.keywords = []
     if 'ttypes' not in st.session_state:
         st.session_state.ttypes = []
-    if 'pairs' not in st.session_state:
-        st.session_state.pairs = []
+    if 'ppairs' not in st.session_state:
+        st.session_state.ppairs = []
     if "uploader_pdf_key" not in st.session_state:
         st.session_state["uploader_pdf_key"] = 1
     if "uploader_json_key" not in st.session_state:
@@ -428,12 +437,7 @@ def main():
                 on_change=update_text,
                 args=(text_key,)
             )
-            if st.button('Save Changes'):
-                print('edited: ', edited_text)
-                print('text_key: ', st.session_state[text_key])
-                print('page_key: ', st.session_state.edited_texts[page_key])
-                #st.session_state[text_key] = edited_text
-                #st.session_state.edited_texts[page_key] = st.session_state[text_key]
+
             #st.session_state.edited_texts[page_key] = edited_text
             if st.session_state.results:               
                 st.sidebar.button(
@@ -453,13 +457,13 @@ def main():
                 maxtags = 10,
                 key='keywords')
             #st.session_state.keywords = keywords
-            pairs = st_tags_sidebar(
+            ppairs = st_tags_sidebar(
                 label='pairs:',
                 text='Press enter to add more',
-                value=st.session_state.pairs,
+                value=st.session_state.ppairs,
                 suggestions=[],
                 maxtags = 10,
-                key='pairs')
+                key='ppairs')
             #st.session_state.pairs = pairs
             ttypes = st_tags_sidebar(
                 label='type:',
