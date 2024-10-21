@@ -573,7 +573,11 @@ def main():
                 #st.session_state.keywords = keywords_text
                 #print(type(keywords_text), keywords_text)
             with kcol2:
-                pass
+                if len(st.session_state.keywords) == 0:
+                    addk = st.text_input('Add keyword')
+                    if addk:
+                        st.session_state["keywords"].append(addk)
+                        st.rerun()
 
             st.sidebar.text("types:")
             tcol1, tcol2 = st.sidebar.columns(2, gap='small')
@@ -582,7 +586,11 @@ def main():
                 #st.session_state.ttypes = types_text
                 #print(types_text)
             with tcol2:
-                pass
+                if len(st.session_state.ttypes) == 0:
+                    addt = st.text_input('Add type')
+                    if addt:
+                        st.session_state["ttypes"].append(addt)
+                        st.rerun()
 
             st.sidebar.text("pairs:")
             pcol1, pcol2 = st.sidebar.columns(2, gap='small')
@@ -591,7 +599,11 @@ def main():
                 #st.session_state.ppairs = pairs_text
                 #print(pairs_text)
             with pcol2:
-                pass
+                if len(st.session_state.ppairs) == 0:
+                    addp = st.text_input('Add pair')
+                    if addp:
+                        st.session_state["ppairs"].append(addp)
+                        st.rerun()
 
 
      # Load functionality
