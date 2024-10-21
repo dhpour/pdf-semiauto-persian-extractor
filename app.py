@@ -20,7 +20,6 @@ def save_session_state():
         #"page_num": st.session_state.page_num,
         "pages": st.session_state.pages,
         "total_pages": st.session_state.total_pages,
-        "edited_texts": st.session_state.edited_texts,
         "first_human_page": st.session_state.first_human_page,
         #"zoom_level": st.session_state.zoom_level,
         "keywords": st.session_state.keywords,
@@ -108,7 +107,6 @@ def reset_session():
     st.session_state.page_num = 1
     st.session_state.pages = []
     st.session_state.total_pages = 0
-    st.session_state.edited_texts = {}
     st.session_state.first_human_page = -1
     st.session_state.zoom_level = 100
     st.session_state.keywords = []
@@ -133,17 +131,13 @@ def load_json_state(file_content):
 
         # Restore basic session state
         for key, value in save_data.items():
-            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "pages", "keywords", "ppairs", "ttypes", "book_index_edited", "keywords_edited", "types_edited", "pairs_edited"]:
+            if key not in ['save_timestamp', "extraction_method", "cached_pages", "pages", "keywords", "ppairs", "ttypes", "book_index_edited", "keywords_edited", "types_edited", "pairs_edited"]:
                 #setattr(st.session_state, key, value)
                 st.session_state[key] = value
             if key == 'pages':
                 #for p in save_data[key]:
                     #st.session_state.pages[p["page"] - 1] = p
                 st.session_state["pages"] = save_data["pages"]
-            if key == 'edited_texts':
-                for k, v in save_data[key].items():
-                    #print('edited_texts ', type(k), v)
-                    st.session_state[key][k] = v
             if key == 'book_index_edited':
                 if "edited_rows" in value and len(value["edited_rows"].items()) > 0:
                     print('hI tHeRe')
@@ -268,8 +262,6 @@ def main():
         st.session_state.pages = []
     if 'total_pages' not in st.session_state:
         st.session_state.total_pages = 0
-    if 'edited_texts' not in st.session_state:
-        st.session_state.edited_texts = {}
     if 'first_human_page' not in st.session_state:
         st.session_state.first_human_page = -1
     if 'zoom_level' not in st.session_state:
@@ -507,14 +499,14 @@ def main():
             new_text = st.session_state[text_key]
             
             # Always update the edited_texts dictionary when text changes
-            st.session_state.edited_texts[str(page_num)] = new_text
+            st.session_state["pages"][page_num-1]["edited_text"] = new_text
 
         def get_current_page_text():
             page_key = f"{st.session_state.page_num}"
 
-            if page_key in st.session_state.edited_texts:
+            if "edited_text" in st.session_state["pages"][st.session_state.page_num-1]:
                 #st.session_state["parse_page"] = False
-                return st.session_state.edited_texts[page_key]
+                return st.session_state["pages"][st.session_state.page_num-1]["edited_text"]
 
             if st.session_state.pages:
                 for page in st.session_state.pages:
@@ -543,8 +535,7 @@ def main():
 
             page_key = f"{st.session_state.page_num}"
 
-            if page_key in st.session_state.edited_texts:
-                #current_text = st.session_state.edited_texts[page_key]
+            if "edited_text" in st.session_state["pages"][st.session_state.page_num-1]:
                 # Show indicator that text has been edited
                 st.info("This text has been edited. Changes are saved automatically.")
 
@@ -565,7 +556,6 @@ def main():
                 editor_text = st.data_editor(df, key="book_index_edited", use_container_width=True)
                 #st.session_state['book_index'] = editor_text
 
-            #st.session_state.edited_texts[page_key] = edited_text
             if st.session_state.pages:
                 st.sidebar.button(
                     label="Set current page as 1st human page",
