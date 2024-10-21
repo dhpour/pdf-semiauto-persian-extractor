@@ -446,6 +446,11 @@ def main():
         col3.button("▶", on_click=next_page)
         col4.button("⏭️", on_click=last_page)
         
+        is_data_key = f"is_data_page_{st.session_state.page_num}"
+        is_data_page = st.session_state['pages'][st.session_state.page_num - 1]["isData"] if "isData" in st.session_state['pages'][st.session_state.page_num - 1] else False
+        is_data = st.sidebar.toggle("Non-data / Data page", value=is_data_page , key=is_data_key)
+        st.session_state['pages'][st.session_state.page_num - 1]["isData"] = is_data
+
         # Add download button to sidebar
         st.sidebar.markdown("---")
         st.sidebar.header("Export")
