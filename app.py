@@ -33,6 +33,7 @@ def save_session_state():
             #k: v for k, v in st.session_state.items() 
             #if k.startswith("cached_page_")
         #}
+        "book_index": st.session_state.book_index,
     }
     
     # Convert to JSON and encode
@@ -110,7 +111,7 @@ def load_json_state(file_content):
             
         # Restore basic session state
         for key, value in save_data.items():
-            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "results", "keywords", "ppairs", "ttypes"]:
+            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "results", "keywords", "ppairs", "ttypes", "book_index_edited"]:
                 #setattr(st.session_state, key, value)
                 st.session_state[key] = value
             if key == 'results' and len(st.session_state.results) == 0:
@@ -129,7 +130,16 @@ def load_json_state(file_content):
             if key == 'ttypes':
                 for kw in save_data[key]:
                     st.session_state[key].append(kw)
-        
+            if key == 'book_index_edited':
+                if "edited_rows" in value and len(value["edited_rows"].items()) > 0:
+                    print('hI tHeRe')
+                    for item in value['edited_rows'].items():
+                        print('-', item)
+                        k, v = item
+                        print(k, v)
+                        for k2, v2 in v.items():
+                            print("\t", k2, v2)
+                            st.session_state["book_index"][int(k)][k2] = v2
         # Restore cached pages
         #if "cached_pages" in save_data:
             #for cache_key, cache_value in save_data["cached_pages"].items():
@@ -468,7 +478,9 @@ def main():
             if len(st.session_state['book_index']) > 0:
                 df = pd.DataFrame(st.session_state['book_index'])
                 df = df[['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']]
-                st.data_editor(df, key="book_index_edited", use_container_width=True)
+                editor_text = st.data_editor(df, key="book_index_edited", use_container_width=True)
+                #st.session_state['book_index'] = editor_text
+
             #st.session_state.edited_texts[page_key] = edited_text
             if st.session_state.results:               
                 st.sidebar.button(
