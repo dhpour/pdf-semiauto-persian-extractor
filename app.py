@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 import fitz
 import base64
 from streamlit_tags import st_tags, st_tags_sidebar
+import pandas as pd
+
 load_dotenv()
 
 def save_session_state():
@@ -116,7 +118,7 @@ def load_json_state(file_content):
                     st.session_state.results.append(p)
             if key == 'edited_texts':
                 for k, v in save_data[key].items():
-                    print('edited_texts ', type(k), v)
+                    #print('edited_texts ', type(k), v)
                     st.session_state[key][k] = v
             if key == 'keywords':
                 for kw in save_data[key]:
@@ -150,6 +152,20 @@ def load_json_state(file_content):
         st.error(f"Error loading session state: {str(e)}")
         return False
 
+def reindex_pages():
+    last_section_index = None
+    last_lesson_index = None
+    for i, rec in enumerate(st.session_state['book_index']):
+        if 'type' in rec and rec['type'] == 'chapter':
+            if last_section_index:
+                st.session_state['book_index'][last_section_index]['end_page'] = rec['start_page']
+            last_section_index = i
+        elif 'type' in rec and rec['type'] == 'lesson':
+            if last_lesson_index:
+                st.session_state['book_index'][last_lesson_index]['end_page'] = rec['start_page']
+            last_lesson_index = i
+    
+
 def main():
     st.set_page_config(layout="wide")
 
@@ -180,6 +196,8 @@ def main():
         st.session_state.debug_counter = 0
     if "parse_page" not in st.session_state:
         st.session_state["parse_page"] = False
+    if 'book_index' not in st.session_state:
+        st.session_state['book_index'] = []
 
     processor = get_processor()
 
@@ -259,10 +277,19 @@ def main():
         #print(record)
         st.session_state.results.append(record)
         #st.session_state[f"cached_page_{st.session_state.page_num}"] = p
-    st.sidebar.button("Parse", on_click=parse)
+    st.sidebar.button("Parse All", on_click=parse)
 
     if st.session_state["parse_page"] or True:
-        st.sidebar.button("Parse page", on_click=parse_page)
+        st.sidebar.button("Parse Page", on_click=parse_page)
+
+    if st.sidebar.button('Build Index'):
+        p = st.session_state[f"page_text_{st.session_state.page_num}"]
+        print('hi')
+        inx = processor.build_index(p)
+        st.session_state['book_index'] += inx
+        reindex_pages()
+        
+        #print('index: ', inx)
 
     if uploaded_file is not None:
 
@@ -438,6 +465,10 @@ def main():
                 args=(text_key,)
             )
 
+            if len(st.session_state['book_index']) > 0:
+                df = pd.DataFrame(st.session_state['book_index'])
+                df = df[['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']]
+                st.data_editor(df, key="book_index_edited", use_container_width=True)
             #st.session_state.edited_texts[page_key] = edited_text
             if st.session_state.results:               
                 st.sidebar.button(

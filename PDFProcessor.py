@@ -40,6 +40,26 @@ class PDFProcessor:
         new_txt = re.sub('[A-Za-z' + string.punctuation + ']+', self.reverse_match, new_txt)
         new_txt = re.sub(r'\d+', self.reverse_match, new_txt)
         return new_txt
+    
+    def build_index(self, txt):
+        pattern = r'^(?P<number>\d+)\s+(?P<string1>.+?)(:\s+(?P<string2>.+))?$'
+        lines = txt.split("\n")
+        records = []
+        for line in lines:
+            tmp = {}
+            match = re.match(pattern, line)
+            if match:
+                tmp['start_page'] = int(self.justifies_lefties(match.group("number")))
+                tmp['secnumber'] = match.group("string1")
+                if "فصل" in tmp['secnumber']:
+                    tmp['type'] = 'chapter'
+                    tmp['chapter'] = tmp['secnumber'].replace('فصل', '').strip()
+                if "درس" in tmp['secnumber']:
+                    tmp['type'] = 'lesson'
+                    tmp['lesson'] = tmp['secnumber'].replace('درس', '').strip()
+                tmp['secname'] = match.group("string2")
+                records.append(tmp)
+        return records
 
     def adjust_plumber_text(self, text):
         tmp = [x.translate(self.repl) for x in ''.join(list(reversed(list(text)))).split("\n")[::-1]]
