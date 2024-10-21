@@ -38,6 +38,15 @@ def save_session_state():
     if "book_index_edited" in st.session_state:
         save_data["book_index_edited"] = st.session_state.book_index_edited
     
+    if "keywords_edited" in st.session_state:
+        save_data["keywords_edited"] = st.session_state.keywords_edited
+
+    if "types_edited" in st.session_state:
+        save_data["types_edited"] = st.session_state.types_edited
+
+    if "pairs_edited" in st.session_state:
+        save_data["pairs_edited"] = st.session_state.pairs_edited
+
     # Convert to JSON and encode
     json_data = json.dumps(save_data, ensure_ascii=False)
     encoded_data = base64.b64encode(json_data.encode()).decode()
@@ -113,7 +122,7 @@ def load_json_state(file_content):
             
         # Restore basic session state
         for key, value in save_data.items():
-            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "results", "keywords", "ppairs", "ttypes", "book_index_edited"]:
+            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "results", "keywords", "ppairs", "ttypes", "book_index_edited", "keywords_edited", "types_edited", "pairs_edited"]:
                 #setattr(st.session_state, key, value)
                 st.session_state[key] = value
             if key == 'results' and len(st.session_state.results) == 0:
@@ -123,15 +132,6 @@ def load_json_state(file_content):
                 for k, v in save_data[key].items():
                     #print('edited_texts ', type(k), v)
                     st.session_state[key][k] = v
-            if key == 'keywords':
-                for kw in save_data[key]:
-                    st.session_state[key].append(kw)
-            if key == 'ppairs':
-                for kw in save_data[key]:
-                    st.session_state[key].append(kw)
-            if key == 'ttypes':
-                for kw in save_data[key]:
-                    st.session_state[key].append(kw)
             if key == 'book_index_edited':
                 if "edited_rows" in value and len(value["edited_rows"].items()) > 0:
                     print('hI tHeRe')
@@ -142,6 +142,73 @@ def load_json_state(file_content):
                         for k2, v2 in v.items():
                             print("\t", k2, v2)
                             st.session_state["book_index"][int(k)][k2] = v2
+
+            if key == 'keywords':
+                print('right here')
+                for kw in save_data[key]:
+                    st.session_state[key].append(kw)
+                if len(st.session_state[key]) == 0:
+                    st.session_state[key].append('')
+            if key == "keywords_edited":
+                if "edited_rows" in value and len(value["edited_rows"].items()) > 0:
+                    for item in value["edited_rows"].items():
+                        print('-', item)
+                        k, v = item
+                        print(k, v)
+                        for k2, v2 in v.items():
+                            print("\t", k2, v2)
+                            st.session_state["keywords"][int(k)] = v2
+                            #s.session_state["keywords"].append()
+                if "added_rows" in value and len(value["added_rows"]) > 0:
+                    for item in value["added_rows"]:
+                        for k2, v2 in item.items():
+                            print('ADDED_ROW:', k2, v2)
+                            st.session_state["keywords"].append(v2)
+                st.session_state["keywords"] = [x for x in st.session_state["keywords"] if x not in ["", " ", None]]
+
+            if key == 'ppairs':
+                for kw in save_data[key]:
+                    st.session_state[key].append(kw)
+                if len(st.session_state[key]) == 0:
+                    st.session_state[key].append('')
+            if key == "pairs_edited":
+                if "edited_rows" in value and len(value["edited_rows"].items()) > 0:
+                    for item in value["edited_rows"].items():
+                        print('-', item)
+                        k, v = item
+                        print(k, v)
+                        for k2, v2 in v.items():
+                            print("\t", k2, v2)
+                            st.session_state["ppairs"][int(k)] = v2
+                if "added_rows" in value and len(value["added_rows"]) > 0:
+                    for item in value["added_rows"]:
+                        for k2, v2 in item.items():
+                            print('ADDED_ROW:', k2, v2)
+                            st.session_state["ppairs"].append(v2)
+                st.session_state["ppairs"] = [x for x in st.session_state["ppairs"] if x not in ["", " ", None]]
+            
+            if key == 'ttypes':
+                for kw in save_data[key]:
+                    st.session_state[key].append(kw)
+                if len(st.session_state[key]) == 0:
+                    st.session_state[key].append('')
+            if key == "types_edited":
+                if "edited_rows" in value and len(value["edited_rows"].items()) > 0:
+                    for item in value["edited_rows"].items():
+                        print('-', item)
+                        k, v = item
+                        print(k, v)
+                        for k2, v2 in v.items():
+                            print("\t", k2, v2)
+                            st.session_state["ttypes"][int(k)] = v2
+                if "added_rows" in value and len(value["added_rows"]) > 0:
+                    for item in value["added_rows"]:
+                        for k2, v2 in item.items():
+                            print('ADDED_ROW:', k2, v2)
+                            st.session_state["ttypes"].append(v2)
+                st.session_state["ttypes"] = [x for x in st.session_state["ttypes"] if x not in ["", " ", None]]
+
+            
         # Restore cached pages
         #if "cached_pages" in save_data:
             #for cache_key, cache_value in save_data["cached_pages"].items():
@@ -210,7 +277,8 @@ def main():
         st.session_state["parse_page"] = False
     if 'book_index' not in st.session_state:
         st.session_state['book_index'] = []
-
+    if 'is_json_loaded' not in st.session_state:
+        st.session_state.is_json_loaded = False
     processor = get_processor()
 
     # Create the main navigation menu in the sidebar
@@ -232,8 +300,9 @@ def main():
                     type="json",
                     key=st.session_state.get("uploader_json_key", 1000)
                 )
-                if uploaded_json is not None:
+                if uploaded_json is not None and not st.session_state.is_json_loaded:
                     file_content = uploaded_json.read().decode('utf-8')
+                    st.session_state.is_json_loaded = True
                     load_json_state(file_content)
                     #if load_json_state(file_content):
                         #st.rerun()
@@ -494,30 +563,32 @@ def main():
             else:
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
 
-            keywords = st_tags_sidebar(
-                label='keywords:',
-                text='Press enter to add more',
-                value=st.session_state.keywords,
-                suggestions=[],
-                maxtags = 10,
-                key='keywords')
-            #st.session_state.keywords = keywords
-            ppairs = st_tags_sidebar(
-                label='pairs:',
-                text='Press enter to add more',
-                value=st.session_state.ppairs,
-                suggestions=[],
-                maxtags = 10,
-                key='ppairs')
-            #st.session_state.pairs = pairs
-            ttypes = st_tags_sidebar(
-                label='type:',
-                text='Press enter to add more',
-                value=st.session_state.ttypes,
-                suggestions=[],
-                maxtags = 10,
-                key='ttypes')
-            #st.session_state.ttypes = ttypes
+            st.sidebar.text('keywords:')
+            kcol1, kcol2 = st.sidebar.columns(2, gap='small')
+            with kcol1:
+                keywords_text = st.sidebar.data_editor(st.session_state.keywords, key="keywords_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
+                #st.session_state.keywords = keywords_text
+                #print(type(keywords_text), keywords_text)
+            with kcol2:
+                pass
+
+            st.sidebar.text("types:")
+            tcol1, tcol2 = st.sidebar.columns(2, gap='small')
+            with tcol1:
+                types_text = st.sidebar.data_editor(st.session_state.ttypes, key="types_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
+                #st.session_state.ttypes = types_text
+                #print(types_text)
+            with tcol2:
+                pass
+
+            st.sidebar.text("pairs:")
+            pcol1, pcol2 = st.sidebar.columns(2, gap='small')
+            with pcol1:
+                pairs_text = st.sidebar.data_editor(st.session_state.ppairs, key="pairs_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
+                #st.session_state.ppairs = pairs_text
+                #print(pairs_text)
+            with pcol2:
+                pass
 
 
      # Load functionality
