@@ -18,7 +18,7 @@ def save_session_state():
     # Collect relevant session state data
     save_data = {
         #"page_num": st.session_state.page_num,
-        "results": st.session_state.results,
+        "pages": st.session_state.pages,
         "total_pages": st.session_state.total_pages,
         "edited_texts": st.session_state.edited_texts,
         "first_human_page": st.session_state.first_human_page,
@@ -70,18 +70,24 @@ def process_pdf(processor, pdf_path, extraction_method):
         plumber_results = processor.process_with_pdfplumber(pdf_path)
         for r in plumber_results:
             r["method"] = "pdfplumber"
+            r["pdfplumber"] = r["text"]
+            del r["text"]
         results.extend(plumber_results)
     
     if extraction_method == "PyMuPDF" or extraction_method == "All Methods":
         pymupdf_results = processor.process_with_pymupdf(pdf_path)
         for r in pymupdf_results:
             r["method"] = "PyMuPDF"
+            r["PyMuPDF"] = r["text"]
+            del r["text"]
         results.extend(pymupdf_results)
     
     if extraction_method in ["doctr (OCR)", "All Methods"]:
         doctr_results = processor.process_with_doctr(pdf_path)
         for r in doctr_results:
             r["method"] = "doctr"
+            r["doctr"] = r["text"]
+            del r["text"]
         results.extend(doctr_results)
     
     if extraction_method == "pdf2image/tesseract" or extraction_method == "All Methods":
@@ -94,11 +100,13 @@ def process_pdf(processor, pdf_path, extraction_method):
         tesser_results = processor.process_with_tesseract(pdf_path)
         for r in tesser_results:
             r["method"] = "tesseract"
+            r["tesseract"] = r["text"]
+            del r["text"]
         results.extend(tesser_results)
     return results
 def reset_session():
     st.session_state.page_num = 1
-    st.session_state.results = []
+    st.session_state.pages = []
     st.session_state.total_pages = 0
     st.session_state.edited_texts = {}
     st.session_state.first_human_page = -1
@@ -119,15 +127,19 @@ def load_json_state(file_content):
             st.session_state.get('total_pages', 0) != save_data['total_pages']):
             st.error(f'JSON and PDF page number not match: {str(save_data["total_pages"])}:{str(st.session_state.get("total_pages", 0))}')
             return False
-            
+        
+        #if "pages" not in st.session_state or len(st.session_state.pages) == 0:
+            #st.session_state['pages'] = [{"page": x} for x in range(1, st.session_state.total_pages + 1)]
+
         # Restore basic session state
         for key, value in save_data.items():
-            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "results", "keywords", "ppairs", "ttypes", "book_index_edited", "keywords_edited", "types_edited", "pairs_edited"]:
+            if key not in ['save_timestamp', "extraction_method", "cached_pages", "edited_texts", "pages", "keywords", "ppairs", "ttypes", "book_index_edited", "keywords_edited", "types_edited", "pairs_edited"]:
                 #setattr(st.session_state, key, value)
                 st.session_state[key] = value
-            if key == 'results' and len(st.session_state.results) == 0:
-                for p in save_data[key]:
-                    st.session_state.results.append(p)
+            if key == 'pages':
+                #for p in save_data[key]:
+                    #st.session_state.pages[p["page"] - 1] = p
+                st.session_state["pages"] = save_data["pages"]
             if key == 'edited_texts':
                 for k, v in save_data[key].items():
                     #print('edited_texts ', type(k), v)
@@ -252,8 +264,8 @@ def main():
     # Initialize session states
     if 'page_num' not in st.session_state:
         st.session_state.page_num = 1
-    if 'results' not in st.session_state:
-        st.session_state.results = []
+    if 'pages' not in st.session_state:
+        st.session_state.pages = []
     if 'total_pages' not in st.session_state:
         st.session_state.total_pages = 0
     if 'edited_texts' not in st.session_state:
@@ -346,19 +358,17 @@ def main():
     #    st.session_state.total_pages = pdf_page_number
 
     def parse():
-        st.session_state.results += process_pdf(processor, processor.temp_pdf_path, extraction_method)
+        all_pages = process_pdf(processor, processor.temp_pdf_path, extraction_method)
+        for page in all_pages:
+            print(page)
+            st.session_state.pages[page['page'] - 1][page["method"]] = page[extraction_method]
+            del page["method"]
 
     def parse_page():
         #print('going to parse page', st.session_state.page_num)
         p = processor.parse_single_page(st.session_state.page_num, extraction_method)
-        record = {
-            "page": st.session_state.page_num,
-            "method": extraction_method,
-            "text": p
-        }
-        #print(record)
-        st.session_state.results.append(record)
-        #st.session_state[f"cached_page_{st.session_state.page_num}"] = p
+        st.session_state.pages[st.session_state.page_num - 1][extraction_method] = p
+
     st.sidebar.button("Parse All", on_click=parse)
 
     if st.session_state["parse_page"] or True:
@@ -393,6 +403,8 @@ def main():
             
             # Load document and process PDF
             st.session_state.total_pages = processor.load_document(processor.temp_pdf_path)
+            if len(st.session_state['pages']) == 0:
+                st.session_state['pages'] = [{"page": x} for x in range(1, st.session_state.total_pages + 1)]
             #if st.session_state.parse_pdf:            
                 #st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
             st.session_state.file_hash = current_file_hash
@@ -504,11 +516,11 @@ def main():
                 #st.session_state["parse_page"] = False
                 return st.session_state.edited_texts[page_key]
 
-            if st.session_state.results:
-                for page in st.session_state.results:
-                    if page['page'] == st.session_state.page_num and page['method'] == extraction_method:
+            if st.session_state.pages:
+                for page in st.session_state.pages:
+                    if page['page'] == st.session_state.page_num and extraction_method in page:
                         st.session_state["parse_page"] = False
-                        return page['text']
+                        return page[extraction_method]
 
             st.session_state["parse_page"] = True
             return "No text available"
@@ -554,7 +566,7 @@ def main():
                 #st.session_state['book_index'] = editor_text
 
             #st.session_state.edited_texts[page_key] = edited_text
-            if st.session_state.results:               
+            if st.session_state.pages:
                 st.sidebar.button(
                     label="Set current page as 1st human page",
                     on_click=set_human_page
