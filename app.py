@@ -35,6 +35,8 @@ def save_session_state():
         #}
         "book_index": st.session_state.book_index,
     }
+    if "book_index_edited" in st.session_state:
+        save_data["book_index_edited"] = st.session_state.book_index_edited
     
     # Convert to JSON and encode
     json_data = json.dumps(save_data, ensure_ascii=False)
