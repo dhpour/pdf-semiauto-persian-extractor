@@ -238,9 +238,10 @@ def reindex_pages():
         if 'type' in rec and rec['type'] == 'chapter':
             if last_section_index:
                 st.session_state['book_index'][last_section_index]['end_page'] = rec['start_page']
+                st.session_state['book_index'][last_lesson_index]['end_page'] = rec['start_page']
             last_section_index = i
         elif 'type' in rec and rec['type'] == 'lesson':
-            if last_lesson_index:
+            if last_lesson_index and "end_page" not in st.session_state['book_index'][last_lesson_index]:
                 st.session_state['book_index'][last_lesson_index]['end_page'] = rec['start_page']
             last_lesson_index = i
     
