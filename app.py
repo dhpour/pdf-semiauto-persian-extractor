@@ -396,7 +396,7 @@ def main():
             # Load document and process PDF
             st.session_state.total_pages = processor.load_document(processor.temp_pdf_path)
             if len(st.session_state['pages']) == 0:
-                st.session_state['pages'] = [{"page": x} for x in range(1, st.session_state.total_pages + 1)]
+                st.session_state['pages'] = [{"page": x, "isData": True} for x in range(1, st.session_state.total_pages + 1)]
             #if st.session_state.parse_pdf:            
                 #st.session_state.results = process_pdf(processor, processor.temp_pdf_path, extraction_method)
             st.session_state.file_hash = current_file_hash
