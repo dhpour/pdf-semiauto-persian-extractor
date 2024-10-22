@@ -363,6 +363,8 @@ def main():
 
     if uploaded_file is not None:
 
+        st.sidebar.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
+
         st.sidebar.button("Parse All", on_click=parse)
 
         if st.session_state["parse_page"] or True:
@@ -477,10 +479,49 @@ def main():
         # Display content
         left_col, right_col = st.columns([1, 1])
         
+        def update_text(text_key):
+            page_num = st.session_state.page_num
+            new_text = st.session_state[text_key]
+            
+            # Always update the edited_texts dictionary when text changes
+            st.session_state["pages"][page_num-1]["edited_text"] = new_text
+
+        def get_current_page_text():
+            page_key = f"{st.session_state.page_num}"
+
+            if "edited_text" in st.session_state["pages"][st.session_state.page_num-1]:
+                #st.session_state["parse_page"] = False
+                return st.session_state["pages"][st.session_state.page_num-1]["edited_text"]
+
+            if st.session_state.pages:
+                for page in st.session_state.pages:
+                    if page['page'] == st.session_state.page_num and extraction_method in page:
+                        st.session_state["parse_page"] = False
+                        return page[extraction_method]
+
+            st.session_state["parse_page"] = True
+            return "No text available"
+
+        def set_human_page():
+            st.session_state.first_human_page = st.session_state.page_num
+            print(st.session_state.first_human_page)
+
         with right_col:
             #st.header(f"PDF Page {st.session_state.page_num}")
             st.subheader(f"PDF page {st.session_state.page_num}")
-
+            
+            if "showMarkdown_key" in st.session_state and st.session_state.showMarkdown_key:
+                #if st.sidebar.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key"):
+                to_md = """
+                    <style>
+                    .rtl {
+                        direction: rtl;
+                        text-align: right;
+                    }
+                    </style>
+                """
+                to_md += get_current_page_text().replace("\n", "<br>")
+                st.markdown(to_md, unsafe_allow_html=True)
             #zoom_level = st.slider("Zoom (%)", min_value=50, max_value=200, value=st.session_state.zoom_level, step=10, key="zoom_slider")
             zoom_level = st.number_input(
                 "Page", 
@@ -510,33 +551,6 @@ def main():
 
             #st.image(img_bytes, use_column_width=True)
         
-        def update_text(text_key):
-            page_num = st.session_state.page_num
-            new_text = st.session_state[text_key]
-            
-            # Always update the edited_texts dictionary when text changes
-            st.session_state["pages"][page_num-1]["edited_text"] = new_text
-
-        def get_current_page_text():
-            page_key = f"{st.session_state.page_num}"
-
-            if "edited_text" in st.session_state["pages"][st.session_state.page_num-1]:
-                #st.session_state["parse_page"] = False
-                return st.session_state["pages"][st.session_state.page_num-1]["edited_text"]
-
-            if st.session_state.pages:
-                for page in st.session_state.pages:
-                    if page['page'] == st.session_state.page_num and extraction_method in page:
-                        st.session_state["parse_page"] = False
-                        return page[extraction_method]
-
-            st.session_state["parse_page"] = True
-            return "No text available"
-
-        def set_human_page():
-            st.session_state.first_human_page = st.session_state.page_num
-            print(st.session_state.first_human_page)
-
         with left_col:
             #st.header("Extracted Text")
             st.subheader("Page text:")
