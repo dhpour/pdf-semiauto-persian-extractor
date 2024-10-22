@@ -276,14 +276,14 @@ def main():
         st.session_state["uploader_pdf_key"] = 1
     if "uploader_json_key" not in st.session_state:
         st.session_state["uploader_json_key"] = 1000
-    if 'debug_counter' not in st.session_state:
-        st.session_state.debug_counter = 0
     if "parse_page" not in st.session_state:
         st.session_state["parse_page"] = False
     if 'book_index' not in st.session_state:
         st.session_state['book_index'] = []
     if 'is_json_loaded' not in st.session_state:
         st.session_state.is_json_loaded = False
+    if 'showIndex' not in st.session_state:
+        st.session_state.showIndex = False
     processor = get_processor()
 
     # Create the main navigation menu in the sidebar
@@ -361,22 +361,22 @@ def main():
         p = processor.parse_single_page(st.session_state.page_num, extraction_method)
         st.session_state.pages[st.session_state.page_num - 1][extraction_method] = p
 
-    st.sidebar.button("Parse All", on_click=parse)
-
-    if st.session_state["parse_page"] or True:
-        st.sidebar.button("Parse Page", on_click=parse_page)
-
-    if st.sidebar.button('Build Index'):
-        p = st.session_state[f"page_text_{st.session_state.page_num}"]
-        print('hi')
-        inx = processor.build_index(p)
-        st.session_state['book_index'] += inx
-        reindex_pages()
-        
-        #print('index: ', inx)
-
     if uploaded_file is not None:
 
+        st.sidebar.button("Parse All", on_click=parse)
+
+        if st.session_state["parse_page"] or True:
+            st.sidebar.button("Parse Page", on_click=parse_page)
+
+        if st.sidebar.button('Build Index'):
+            p = st.session_state[f"page_text_{st.session_state.page_num}"]
+            print('hi')
+            inx = processor.build_index(p)
+            st.session_state['book_index'] += inx
+            reindex_pages()
+        if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
+            print('st.session_state.showIndex: ', st.session_state.showIndex)
+            print('st.session_state.showIndex: ', st.session_state.showIndex_key)
         # Store filename in session state
         st.session_state.uploaded_filename = uploaded_file.name
 
@@ -544,6 +544,11 @@ def main():
                 # Show indicator that text has been edited
                 st.info("This text has been edited. Changes are saved automatically.")
 
+            if len(st.session_state['book_index']) > 0 and "showIndex_key" in st.session_state and st.session_state.showIndex_key:
+                df = pd.DataFrame(st.session_state['book_index'])
+                df = df[['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']]
+                editor_text = st.data_editor(df, key="book_index_edited", use_container_width=False, height=800)
+                #st.session_state['book_index'] = editor_text
 
             # Display the text area
             edited_text = st.text_area(
@@ -555,11 +560,7 @@ def main():
                 args=(text_key,)
             )
 
-            if len(st.session_state['book_index']) > 0:
-                df = pd.DataFrame(st.session_state['book_index'])
-                df = df[['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']]
-                editor_text = st.data_editor(df, key="book_index_edited", use_container_width=True)
-                #st.session_state['book_index'] = editor_text
+            
 
             if st.session_state.pages:
                 st.sidebar.button(
@@ -620,9 +621,18 @@ def main():
     # Add debug information
     if os.getenv('DEBUG', 'False').lower() in ('true'):
         with st.expander("Debug Information", expanded=True):
-            st.session_state.debug_counter += 1
-            st.write("COUNTER: ", st.session_state.debug_counter)
-            st.write("SESSION: ", st.session_state)
+            if len(st.session_state.pages) > 0:
+                st.write('Current page: ', st.session_state.pages[st.session_state.page_num-1])
+            st.write('keywords: ', st.session_state.keywords)
+            if "keywords_edited" in st.session_state:
+                st.write('keywords_edited: ', st.session_state.keywords_edited)
+            st.write('pairs: ', st.session_state.ppairs)
+            if "pairs_edited" in st.session_state:
+                st.write('pairs_edited: ', st.session_state.pairs_edited)
+            st.write('types: ', st.session_state.ttypes)
+            if "types_edited" in st.session_state:
+                st.write('types_edited: ', st.session_state.types_edited)
+            #st.write("SESSION: ", st.session_state)
 
 if __name__ == "__main__":
     main()
