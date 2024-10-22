@@ -581,7 +581,7 @@ def main():
                 st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
                 st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
                 for page in st.session_state.pages:
-                    page['human_page'] = page["page"] - st.session_state.first_human_page + 1 if page["page"] - st.session_state.first_human_page >= 0 else -1
+                    page['human_page'] = page["page"] - st.session_state.first_human_page + 1 if (st.session_state.first_human_page != -1 and page["page"] - st.session_state.first_human_page >= 0) else -1
             else:
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
 
