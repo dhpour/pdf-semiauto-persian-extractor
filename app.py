@@ -459,8 +459,12 @@ def main():
             if key in st.session_state:
                 st.session_state['pages'][st.session_state.page_num - 1]["dataType"] = st.session_state[key]
         if is_data:
+            if "dataType" in st.session_state['pages'][st.session_state.page_num - 1]:
+                st.session_state[data_type_key] = st.session_state['pages'][st.session_state.page_num - 1]["dataType"]
             dataType = st.sidebar.selectbox("Type of data:", 
                 ("context", "question", "answer"), #context is default and no need to explicitly set in json data
+                index=None,
+                placeholder="Select data type",
                 on_change=set_data_type, key=data_type_key, args=(data_type_key, )) #"question+answer", "cheat"
             print(dataType)
 
