@@ -451,6 +451,17 @@ def main():
         is_data = st.sidebar.toggle("Non-data / Data page", value=is_data_page , key=is_data_key)
         st.session_state['pages'][st.session_state.page_num - 1]["isData"] = is_data
 
+        data_type_key = f"data_type_page_{st.session_state.page_num}"
+        #data_type_page = st.session_state['pages'][st.session_state.page_num - 1]["dataType"] if "dataType" in st.session_state['pages'][st.session_state.page_num - 1] else False
+        def set_data_type(key):
+            if key in st.session_state:
+                st.session_state['pages'][st.session_state.page_num - 1]["dataType"] = st.session_state[key]
+        if is_data:
+            dataType = st.sidebar.selectbox("Type of data:", 
+                ("context", "question", "answer"), #context is default and no need to explicitly set in json data
+                on_change=set_data_type, key=data_type_key, args=(data_type_key, )) #"question+answer", "cheat"
+            print(dataType)
+
         # Add download button to sidebar
         st.sidebar.markdown("---")
         st.sidebar.header("Export")
