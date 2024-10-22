@@ -551,7 +551,7 @@ def main():
             with open("custom_html.html",'r') as f: 
                 custom_html = f.read()
             custom_html = custom_html.format(zoom_level=zoom_level, img_base64=img_base64)
-            st.components.v1.html(custom_html, height=600, scrolling=False)
+            st.components.v1.html(custom_html, height=650, scrolling=False)
 
             #st.image(img_bytes, use_column_width=True)
         
