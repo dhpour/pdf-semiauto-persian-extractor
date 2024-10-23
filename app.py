@@ -468,6 +468,11 @@ def main():
                 on_change=set_data_type, key=data_type_key, args=(data_type_key, )) #"question+answer", "cheat"
             print(dataType)
 
+        to_review_key = f"to_reiew_page_{st.session_state.page_num}"
+        to_review_page = st.session_state['pages'][st.session_state.page_num - 1]["toReview"] if "toReview" in st.session_state['pages'][st.session_state.page_num - 1] else False
+        to_review = st.sidebar.toggle("Need Review", value=to_review_page , key=to_review_key)
+        st.session_state['pages'][st.session_state.page_num - 1]["toReview"] = to_review
+
         # Add download button to sidebar
         st.sidebar.markdown("---")
         st.sidebar.header("Export")
