@@ -361,6 +361,11 @@ def main():
         p = processor.parse_single_page(st.session_state.page_num, extraction_method)
         st.session_state.pages[st.session_state.page_num - 1][extraction_method] = p
 
+    def remove_diacritics(txt):
+        import re
+        diacritics = ''.join([chr(x) for x in list(range(0x64b, 0x652)) + [1648]])
+        return re.sub(' ?[' + diacritics + ']+', '', txt)
+
     if uploaded_file is not None:
 
         st.sidebar.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
@@ -376,6 +381,8 @@ def main():
             inx = processor.build_index(p)
             st.session_state['book_index'] += inx
             reindex_pages()
+        if st.sidebar.button('Remove diacritics'):
+            st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
         if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
             print('st.session_state.showIndex: ', st.session_state.showIndex)
             print('st.session_state.showIndex: ', st.session_state.showIndex_key)
