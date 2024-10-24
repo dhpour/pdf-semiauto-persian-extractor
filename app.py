@@ -362,7 +362,7 @@ def main():
     def parse_page():
         #print('going to parse page', st.session_state.page_num)
         x = st.session_state.col_center if "col_center" in st.session_state else 0
-        p = processor.parse_single_page(st.session_state.page_num, extraction_method, x)
+        p = processor.parse_single_page(st.session_state.page_num, extraction_method, int(x))
         st.session_state.pages[st.session_state.page_num - 1][extraction_method] = p
 
     def remove_diacritics(txt):
