@@ -330,7 +330,7 @@ def main():
 
     st.sidebar.button("New Project", on_click=reset)
     st.sidebar.header("Configuration")
-    extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF"] #, "pdf2image/tesseract"]
+    extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF", "surya"] #, "pdf2image/tesseract"]
     try:
         #import doctr
         #extraction_methods.extend(["doctr (OCR)", "All Methods"])

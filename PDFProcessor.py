@@ -8,6 +8,11 @@ import re
 import string
 from dotenv import load_dotenv
 import os
+from surya.ocr import run_ocr
+from surya.model.detection.model import load_model as load_det_model, load_processor as load_det_processor
+from surya.model.recognition.model import load_model as load_rec_model
+from surya.model.recognition.processor import load_processor as load_rec_processor
+import json
 
 load_dotenv()
 
@@ -19,6 +24,9 @@ class PDFProcessor:
         self.latin_digits = "12345678900987654321"
         self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٠٩٨٧٦٥٤٣٢١"
         self.repl = str.maketrans(self.farsi_digits, self.latin_digits)
+        self.langs = ["fa", "ar"] # Replace with your languages - optional but recommended
+        self.surya_det_processor, self.surya_det_model = load_det_processor(), load_det_model()
+        self.surya_rec_model, self.surya_rec_processor = load_rec_model(), load_rec_processor()   
     
     def init_doctr(self):
         if self.doctr_model is None:
@@ -143,6 +151,28 @@ class PDFProcessor:
         except Exception as e:
             return [{"page": 1, "text": f"Error processing with Tesseract: {str(e)}"}]
 
+    def parse_with_surya(self, pdf_path):
+        all_pages = []
+        for page_num in range(len(self.doc)):
+            page = self.doc[page_num]
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+            
+            # Convert PyMuPDF pixmap to PIL Image
+            all_lines = ''
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            predictions = run_ocr([img], [self.langs], self.surya_det_model, self.surya_det_processor, self.surya_rec_model, self.surya_rec_processor)
+            for line in json.loads(predictions[0].json())['text_lines']:
+                if line['bbox'][0] > 600: #right col
+                    all_lines += line['text'] + "\n"
+            for line in json.loads(predictions[0].json())['text_lines']:
+                if line['bbox'][0] <= 600: #left col
+                    all_lines += line['text'] + "\n"
+            all_pages.append({
+                'page': page_num + 1,
+                'text': all_lines if all_lines != '' else "No text extracted"
+            })
+        return all_pages
+
     def parse_single_page(self, page, method):
         
         page = page - 1
@@ -160,6 +190,22 @@ class PDFProcessor:
             pix = p.get_pixmap(matrix=fitz.Matrix(2, 2))
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             return pytesseract.image_to_string(img, lang='fas+ara')
+        
+        elif method =="surya":
+            p = self.doc[page]
+            pix = p.get_pixmap(matrix=fitz.Matrix(2, 2))
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            predictions = run_ocr([img], [self.langs], self.surya_det_model, self.surya_det_processor, self.surya_rec_model, self.surya_rec_processor)
+            all_lines = ''
+            with open('test.json', 'w', encoding='utf-8') as out:
+                out.write(predictions[0].json())
+            for line in json.loads(predictions[0].json())['text_lines']:
+                if line['bbox'][0] > 600: #right col
+                    all_lines += line['text'] + "\n"
+            for line in json.loads(predictions[0].json())['text_lines']:
+                if line['bbox'][0] <= 600: #left col
+                    all_lines += line['text'] + "\n"
+            return all_lines
     
     def cleanup(self):
         if self.doc:
