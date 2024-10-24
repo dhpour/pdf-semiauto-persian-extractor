@@ -162,10 +162,10 @@ class PDFProcessor:
             img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             predictions = run_ocr([img], [self.langs], self.surya_det_model, self.surya_det_processor, self.surya_rec_model, self.surya_rec_processor)
             for line in json.loads(predictions[0].json())['text_lines']:
-                if line['bbox'][0] > 600: #right col
+                if line['bbox'][0] > 480: #right col
                     all_lines += line['text'] + "\n"
             for line in json.loads(predictions[0].json())['text_lines']:
-                if line['bbox'][0] <= 600: #left col
+                if line['bbox'][0] <= 480: #left col
                     all_lines += line['text'] + "\n"
             all_pages.append({
                 'page': page_num + 1,
@@ -200,10 +200,10 @@ class PDFProcessor:
             with open('test.json', 'w', encoding='utf-8') as out:
                 out.write(predictions[0].json())
             for line in json.loads(predictions[0].json())['text_lines']:
-                if line['bbox'][0] > 600: #right col
+                if line['bbox'][0] > 480: #right col
                     all_lines += line['text'] + "\n"
             for line in json.loads(predictions[0].json())['text_lines']:
-                if line['bbox'][0] <= 600: #left col
+                if line['bbox'][0] < 480: #left col
                     all_lines += line['text'] + "\n"
             return all_lines
     
