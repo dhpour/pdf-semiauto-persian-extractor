@@ -173,8 +173,8 @@ class PDFProcessor:
             })
         return all_pages
 
-    def parse_single_page(self, page, method):
-        
+    def parse_single_page(self, page, method, x=0):
+        print('x: ', x)
         page = page - 1
         if method == "pdfplumber":
             with pdfplumber.open(self.temp_pdf_path) as pdf:
@@ -200,10 +200,10 @@ class PDFProcessor:
             #with open('test.json', 'w', encoding='utf-8') as out:
                 #out.write(predictions[0].json())
             for line in json.loads(predictions[0].json())['text_lines']:
-                if line['bbox'][0] > 480: #right col
+                if line['bbox'][0] > x: #480: #right col
                     all_lines += line['text'] + "\n"
             for line in json.loads(predictions[0].json())['text_lines']:
-                if line['bbox'][0] < 480: #left col
+                if line['bbox'][0] < x: #480: #left col
                     all_lines += line['text'] + "\n"
             return all_lines
     

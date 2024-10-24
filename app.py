@@ -339,6 +339,9 @@ def main():
         pass
     
     extraction_method = st.sidebar.radio("Select Extraction Method", extraction_methods)
+
+    if extraction_method == "surya":
+        st.sidebar.number_input("2 col center X:", key="col_center")
     
     #uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf", key=st.session_state["uploader_pdf_key"])
 
@@ -358,7 +361,8 @@ def main():
 
     def parse_page():
         #print('going to parse page', st.session_state.page_num)
-        p = processor.parse_single_page(st.session_state.page_num, extraction_method)
+        x = st.session_state.col_center if "col_center" in st.session_state else 0
+        p = processor.parse_single_page(st.session_state.page_num, extraction_method, x)
         st.session_state.pages[st.session_state.page_num - 1][extraction_method] = p
 
     def remove_diacritics(txt):
