@@ -599,7 +599,7 @@ def main():
             if len(st.session_state['book_index']) > 0 and "showIndex_key" in st.session_state and st.session_state.showIndex_key:
                 df = pd.DataFrame(st.session_state['book_index'])
                 df = df[['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']]
-                editor_text = st.data_editor(df, key="book_index_edited", use_container_width=False, height=800)
+                editor_text = st.data_editor(df, key="book_index_edited", use_container_width=False, height=(400 if len(df) < 20 else 800))
                 #st.session_state['book_index'] = editor_text
 
             # Display the text area
