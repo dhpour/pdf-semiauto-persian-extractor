@@ -393,7 +393,11 @@ def main():
             st.session_state['book_index'] += inx
             reindex_pages()
         if st.sidebar.button('Remove diacritics'):
-            st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
+            if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
+                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
+            else:
+                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
+
         if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
             print('st.session_state.showIndex: ', st.session_state.showIndex)
             print('st.session_state.showIndex: ', st.session_state.showIndex_key)
