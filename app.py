@@ -250,6 +250,13 @@ def reindex_pages():
             if last_lesson_index and "end_page" not in st.session_state['book_index'][last_lesson_index]:
                 st.session_state['book_index'][last_lesson_index]['end_page'] = rec['start_page']
             last_lesson_index = i
+
+    temp = pd.DataFrame(st.session_state['book_index'])
+    for col_name in ['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']:
+        if col_name not in temp:
+            temp[col_name] = None
+
+    st.session_state['book_index'] = temp.to_dict('records')
     
 
 def main():
@@ -677,7 +684,7 @@ def main():
             st.write('types: ', st.session_state.ttypes)
             if "types_edited" in st.session_state:
                 st.write('types_edited: ', st.session_state.types_edited)
-            #st.write("SESSION: ", st.session_state)
+            st.write("SESSION: ", st.session_state)
 
 if __name__ == "__main__":
     main()
