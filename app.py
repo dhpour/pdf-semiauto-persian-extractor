@@ -397,7 +397,16 @@ def main():
                 st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
             else:
                 st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
+        st.sidebar.text_input(label="To Replace:", placeholder="To replace", key="to_replace")
+        st.sidebar.text_input(label="Replace with:", placeholder="Replace with", key="replace_with")
+        if st.sidebar.button('Replace') and \
+            "to_replace" in st.session_state and st.session_state["to_replace"] != "" and \
+            "replace_with" in st.session_state:
 
+            if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
+                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1]["edited_text"].replace(st.session_state["to_replace"], st.session_state["replace_with"])
+            else:
+                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1][extraction_method].replace(st.session_state["to_replace"], st.session_state["replace_with"])
         if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
             print('st.session_state.showIndex: ', st.session_state.showIndex)
             print('st.session_state.showIndex: ', st.session_state.showIndex_key)
