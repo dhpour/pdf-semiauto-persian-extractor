@@ -252,7 +252,7 @@ def reindex_pages():
             last_lesson_index = i
 
     temp = pd.DataFrame(st.session_state['book_index'])
-    for col_name in ['chapter', 'lesson', 'secnumber', 'secname', 'type', 'start_page', 'end_page']:
+    for col_name in ['chapter', 'lesson', 'secnumber', 'secname', 'bnum', 'type', 'start_page', 'end_page']:
         if col_name not in temp:
             temp[col_name] = None
 
