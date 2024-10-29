@@ -374,7 +374,7 @@ def main():
 
     def remove_diacritics(txt):
         import re
-        diacritics = ''.join([chr(x) for x in list(range(0x64b, 0x652)) + [1648]])
+        diacritics = ''.join([chr(x) for x in list(range(0x64b, 0x652)) + [1648, 1618]])
         return re.sub(' ?[' + diacritics + ']+', '', txt)
 
     if uploaded_file is not None:
