@@ -256,6 +256,7 @@ def reindex_pages():
         if col_name not in temp:
             temp[col_name] = None
 
+    temp = temp.replace({float('nan'): None})
     st.session_state['book_index'] = temp.to_dict('records')
     
 
