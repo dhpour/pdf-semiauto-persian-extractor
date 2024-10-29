@@ -639,44 +639,44 @@ def main():
             else:
                 st.warning(f"No text extracted for page {st.session_state.page_num}")
 
-            st.sidebar.text('keywords:')
-            kcol1, kcol2 = st.sidebar.columns(2, gap='small')
-            with kcol1:
-                keywords_text = st.sidebar.data_editor(st.session_state.keywords, key="keywords_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
-                #st.session_state.keywords = keywords_text
-                #print(type(keywords_text), keywords_text)
-            with kcol2:
-                if len(st.session_state.keywords) == 0:
-                    addk = st.text_input('Add keyword')
-                    if addk:
-                        st.session_state["keywords"].append(addk)
-                        st.rerun()
+        st.sidebar.text('keywords:')
+        kcol1, kcol2 = st.sidebar.columns(2, gap='small')
+        with kcol1:
+            keywords_text = st.sidebar.data_editor(st.session_state.keywords, key="keywords_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
+            #st.session_state.keywords = keywords_text
+            #print(type(keywords_text), keywords_text)
+        with kcol2:
+            if len(st.session_state.keywords) == 0:
+                addk = st.text_input('Add keyword')
+                if addk:
+                    st.session_state["keywords"].append(addk)
+                    st.rerun()
 
-            st.sidebar.text("types:")
-            tcol1, tcol2 = st.sidebar.columns(2, gap='small')
-            with tcol1:
-                types_text = st.sidebar.data_editor(st.session_state.ttypes, key="types_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
-                #st.session_state.ttypes = types_text
-                #print(types_text)
-            with tcol2:
-                if len(st.session_state.ttypes) == 0:
-                    addt = st.text_input('Add type')
-                    if addt:
-                        st.session_state["ttypes"].append(addt)
-                        st.rerun()
+        st.sidebar.text("types:")
+        tcol1, tcol2 = st.sidebar.columns(2, gap='small')
+        with tcol1:
+            types_text = st.sidebar.data_editor(st.session_state.ttypes, key="types_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
+            #st.session_state.ttypes = types_text
+            #print(types_text)
+        with tcol2:
+            if len(st.session_state.ttypes) == 0:
+                addt = st.text_input('Add type')
+                if addt:
+                    st.session_state["ttypes"].append(addt)
+                    st.rerun()
 
-            st.sidebar.text("pairs:")
-            pcol1, pcol2 = st.sidebar.columns(2, gap='small')
-            with pcol1:
-                pairs_text = st.sidebar.data_editor(st.session_state.ppairs, key="pairs_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
-                #st.session_state.ppairs = pairs_text
-                #print(pairs_text)
-            with pcol2:
-                if len(st.session_state.ppairs) == 0:
-                    addp = st.text_input('Add pair')
-                    if addp:
-                        st.session_state["ppairs"].append(addp)
-                        st.rerun()
+        st.sidebar.text("pairs:")
+        pcol1, pcol2 = st.sidebar.columns(2, gap='small')
+        with pcol1:
+            pairs_text = st.sidebar.data_editor(st.session_state.ppairs, key="pairs_edited", use_container_width=True, num_rows="dynamic") #, hide_index=True)
+            #st.session_state.ppairs = pairs_text
+            #print(pairs_text)
+        with pcol2:
+            if len(st.session_state.ppairs) == 0:
+                addp = st.text_input('Add pair')
+                if addp:
+                    st.session_state["ppairs"].append(addp)
+                    st.rerun()
 
 
      # Load functionality
