@@ -337,29 +337,6 @@ def main():
 
     st.sidebar.button("New Project", on_click=reset)
     
-    st.sidebar.header("Configuration")
-    extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF", "surya"] #, "pdf2image/tesseract"]
-    try:
-        #import doctr
-        #extraction_methods.extend(["doctr (OCR)", "All Methods"])
-        pass
-    except ImportError:
-        pass
-    
-    extraction_method = st.sidebar.radio("Select Extraction Method", extraction_methods)
-
-    if extraction_method == "surya":
-        st.sidebar.number_input("2 col center X:", key="col_center")
-    
-    #uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf", key=st.session_state["uploader_pdf_key"])
-
-    pdf_page_number = processor.load_document(processor.temp_pdf_path)
-    if st.session_state.total_pages != 0 and st.session_state.total_pages != pdf_page_number:
-        st.error(f'JSON and PDF page number not match: {str(st.session_state.total_pages)}:{str(pdf_page_number)}')
-    #    uploaded_file = None
-    #else:
-    #    st.session_state.total_pages = pdf_page_number
-
     def parse():
         all_pages = process_pdf(processor, processor.temp_pdf_path, extraction_method)
         for page in all_pages:
@@ -382,36 +359,62 @@ def main():
         st.session_state.first_human_page = st.session_state.page_num
         print(st.session_state.first_human_page)
 
+    with st.sidebar:
+        with st.expander("Configuration:", expanded=False):
+            #st.header("Configuration")
+            extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF", "surya"] #, "pdf2image/tesseract"]
+            try:
+                #import doctr
+                #extraction_methods.extend(["doctr (OCR)", "All Methods"])
+                pass
+            except ImportError:
+                pass
+            
+            extraction_method = st.radio("Select Extraction Method", extraction_methods)
+
+            if extraction_method == "surya":
+                st.number_input("2 col center X:", key="col_center")
+            
+            #uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf", key=st.session_state["uploader_pdf_key"])
+
+            pdf_page_number = processor.load_document(processor.temp_pdf_path)
+            if st.session_state.total_pages != 0 and st.session_state.total_pages != pdf_page_number:
+                st.error(f'JSON and PDF page number not match: {str(st.session_state.total_pages)}:{str(pdf_page_number)}')
+            #    uploaded_file = None
+            #else:
+            #    st.session_state.total_pages = pdf_page_number
+
+            if uploaded_file is not None:
+
+                st.button("Parse All", on_click=parse)
+
+                if st.session_state["parse_page"] or True:
+                    st.button("Parse Page", on_click=parse_page)
+
+                if st.button('Build Index'):
+                    p = st.session_state[f"page_text_{st.session_state.page_num}"]
+                    print('hi')
+                    inx = processor.build_index(p)
+                    st.session_state['book_index'] += inx
+                    reindex_pages()
+                if st.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
+                    print('st.session_state.showIndex: ', st.session_state.showIndex)
+                    print('st.session_state.showIndex: ', st.session_state.showIndex_key)
+                if st.session_state.pages:
+                    st.button(
+                        label="Set current page as 1st human page",
+                        on_click=set_human_page
+                    )
+                    st.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
+                    st.text('First human page (offset): ' + str(st.session_state.first_human_page))
+                    for page in st.session_state.pages:
+                        page['human_page'] = page["page"] - st.session_state.first_human_page + 1 if (st.session_state.first_human_page != -1 and page["page"] - st.session_state.first_human_page >= 0) else -1
+                else:
+                    st.warning(f"No text extracted for page {st.session_state.page_num}")
+                
+                st.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
+
     if uploaded_file is not None:
-
-        st.sidebar.button("Parse All", on_click=parse)
-
-        if st.session_state["parse_page"] or True:
-            st.sidebar.button("Parse Page", on_click=parse_page)
-
-        if st.sidebar.button('Build Index'):
-            p = st.session_state[f"page_text_{st.session_state.page_num}"]
-            print('hi')
-            inx = processor.build_index(p)
-            st.session_state['book_index'] += inx
-            reindex_pages()
-        if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
-            print('st.session_state.showIndex: ', st.session_state.showIndex)
-            print('st.session_state.showIndex: ', st.session_state.showIndex_key)
-        if st.session_state.pages:
-            st.sidebar.button(
-                label="Set current page as 1st human page",
-                on_click=set_human_page
-            )
-            st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
-            st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
-            for page in st.session_state.pages:
-                page['human_page'] = page["page"] - st.session_state.first_human_page + 1 if (st.session_state.first_human_page != -1 and page["page"] - st.session_state.first_human_page >= 0) else -1
-        else:
-            st.warning(f"No text extracted for page {st.session_state.page_num}")
-        
-        st.sidebar.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
-        
         if st.sidebar.button('Remove diacritics'):
             if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
                 st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
