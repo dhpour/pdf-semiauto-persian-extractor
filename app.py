@@ -336,6 +336,7 @@ def main():
         st.rerun()
 
     st.sidebar.button("New Project", on_click=reset)
+    
     st.sidebar.header("Configuration")
     extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF", "surya"] #, "pdf2image/tesseract"]
     try:
@@ -377,9 +378,11 @@ def main():
         diacritics = ''.join([chr(x) for x in list(range(0x64b, 0x652)) + [1648, 1618]])
         return re.sub(' ?[' + diacritics + ']+', '', txt)
 
-    if uploaded_file is not None:
+    def set_human_page():
+        st.session_state.first_human_page = st.session_state.page_num
+        print(st.session_state.first_human_page)
 
-        st.sidebar.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
+    if uploaded_file is not None:
 
         st.sidebar.button("Parse All", on_click=parse)
 
@@ -392,6 +395,23 @@ def main():
             inx = processor.build_index(p)
             st.session_state['book_index'] += inx
             reindex_pages()
+        if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
+            print('st.session_state.showIndex: ', st.session_state.showIndex)
+            print('st.session_state.showIndex: ', st.session_state.showIndex_key)
+        if st.session_state.pages:
+            st.sidebar.button(
+                label="Set current page as 1st human page",
+                on_click=set_human_page
+            )
+            st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
+            st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
+            for page in st.session_state.pages:
+                page['human_page'] = page["page"] - st.session_state.first_human_page + 1 if (st.session_state.first_human_page != -1 and page["page"] - st.session_state.first_human_page >= 0) else -1
+        else:
+            st.warning(f"No text extracted for page {st.session_state.page_num}")
+        
+        st.sidebar.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
+        
         if st.sidebar.button('Remove diacritics'):
             if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
                 st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
@@ -407,9 +427,7 @@ def main():
                 st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1]["edited_text"].replace(st.session_state["to_replace"], st.session_state["replace_with"])
             else:
                 st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1][extraction_method].replace(st.session_state["to_replace"], st.session_state["replace_with"])
-        if st.sidebar.toggle("Show/Hide Index", value=st.session_state.showIndex, key="showIndex_key"):
-            print('st.session_state.showIndex: ', st.session_state.showIndex)
-            print('st.session_state.showIndex: ', st.session_state.showIndex_key)
+
         # Store filename in session state
         st.session_state.uploaded_filename = uploaded_file.name
 
@@ -542,10 +560,6 @@ def main():
             st.session_state["parse_page"] = True
             return "No text available"
 
-        def set_human_page():
-            st.session_state.first_human_page = st.session_state.page_num
-            print(st.session_state.first_human_page)
-
         with right_col:
             #st.header(f"PDF Page {st.session_state.page_num}")
             st.subheader(f"PDF page {st.session_state.page_num}")
@@ -625,19 +639,6 @@ def main():
                 args=(text_key,)
             )
 
-            
-
-            if st.session_state.pages:
-                st.sidebar.button(
-                    label="Set current page as 1st human page",
-                    on_click=set_human_page
-                )
-                st.sidebar.text('Current human page number: ' + str(st.session_state.page_num - st.session_state.first_human_page + 1 if (st.session_state.first_human_page > 0 and st.session_state.page_num - st.session_state.first_human_page >= 0) else -1))
-                st.sidebar.text('First human page (offset): ' + str(st.session_state.first_human_page))
-                for page in st.session_state.pages:
-                    page['human_page'] = page["page"] - st.session_state.first_human_page + 1 if (st.session_state.first_human_page != -1 and page["page"] - st.session_state.first_human_page >= 0) else -1
-            else:
-                st.warning(f"No text extracted for page {st.session_state.page_num}")
 
         with st.sidebar:
             with st.expander("Keywords:", expanded=False):
