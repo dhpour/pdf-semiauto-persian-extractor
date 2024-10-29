@@ -415,21 +415,23 @@ def main():
                 st.toggle("Show/Hide Markdown", value=st.session_state.showIndex, key="showMarkdown_key")
 
     if uploaded_file is not None:
-        if st.sidebar.button('Remove diacritics'):
-            if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
-                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
-            else:
-                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
-        st.sidebar.text_input(label="To Replace:", placeholder="To replace", key="to_replace")
-        st.sidebar.text_input(label="Replace with:", placeholder="Replace with", key="replace_with")
-        if st.sidebar.button('Replace') and \
-            "to_replace" in st.session_state and st.session_state["to_replace"] != "" and \
-            "replace_with" in st.session_state:
+        with st.sidebar:
+            with st.expander("Edit:", expanded=False):
+                if st.button('Remove diacritics'):
+                    if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
+                        st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
+                    else:
+                        st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
+                st.text_input(label="To Replace:", placeholder="To replace", key="to_replace")
+                st.text_input(label="Replace with:", placeholder="Replace with", key="replace_with")
+                if st.button('Replace') and \
+                    "to_replace" in st.session_state and st.session_state["to_replace"] != "" and \
+                    "replace_with" in st.session_state:
 
-            if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
-                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1]["edited_text"].replace(st.session_state["to_replace"], st.session_state["replace_with"])
-            else:
-                st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1][extraction_method].replace(st.session_state["to_replace"], st.session_state["replace_with"])
+                    if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
+                        st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1]["edited_text"].replace(st.session_state["to_replace"], st.session_state["replace_with"])
+                    else:
+                        st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1][extraction_method].replace(st.session_state["to_replace"], st.session_state["replace_with"])
 
         # Store filename in session state
         st.session_state.uploaded_filename = uploaded_file.name
