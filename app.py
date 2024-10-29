@@ -293,6 +293,19 @@ def main():
         st.session_state.showIndex = False
     processor = get_processor()
 
+    def reset():
+        #reset_session()
+        #for key in st.session_state.keys():
+            #del st.session_state[key]
+        #processor = get_processor()
+        st.session_state["uploader_pdf_key"] += 1
+        st.session_state["uploader_json_key"] += 1
+        #st.cache_data.clear()
+        
+
+        st.rerun()
+        
+    st.sidebar.button("New Project", on_click=reset)
     # Create the main navigation menu in the sidebar
     with st.sidebar:
         with st.expander("📁 File Operations", expanded=True):
@@ -319,23 +332,8 @@ def main():
                     #if load_json_state(file_content):
                         #st.rerun()
 
-        st.markdown("---")
+        #st.markdown("---")
     st.title("PDF Content Extractor")
-    
-    
-    def reset():
-        #reset_session()
-        #for key in st.session_state.keys():
-            #del st.session_state[key]
-        #processor = get_processor()
-        st.session_state["uploader_pdf_key"] += 1
-        st.session_state["uploader_json_key"] += 1
-        #st.cache_data.clear()
-        
-
-        st.rerun()
-
-    st.sidebar.button("New Project", on_click=reset)
     
     def parse():
         all_pages = process_pdf(processor, processor.temp_pdf_path, extraction_method)
@@ -528,7 +526,7 @@ def main():
         st.session_state['pages'][st.session_state.page_num - 1]["toReview"] = to_review
 
         # Add download button to sidebar
-        st.sidebar.markdown("---")
+        #st.sidebar.markdown("---")
         st.sidebar.header("Export")
         #download_json_button()
 
