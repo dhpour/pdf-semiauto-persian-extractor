@@ -14,6 +14,15 @@ import pandas as pd
 
 load_dotenv()
 
+def normalize(text):
+  
+  srcLine = ',?%1234567890;“”ﭘﺮﺯﻭﺻكىيﻬ٧ﺍﭙﺚﻖﯿﮎﺗﯼيﺴﻯﮥﺻﯾﺸﺿﻔﻐﻴﺞ٦ﻡےكﻩﺟﺜﻥﺰﻟﭻﻰﻣﻉﻳﺪﻤﺒ٤ﺫﺠﻲﺳﻓﺭﺨﮏﺕﻧﺵﮑ١ﮔﻗ٢ﺘﻱﻭﮯ٥ٱﻫﺩ٨ﻏﻦﻠﺺﺼﭘﺖﺏﻕﺲﺷۀﻎﻝﭽﻮﻑﺶﻨﺮﮕﮐﺣ٩٠٣ةﻍﺝﻒﭼﮓﺹﻌﯽﺛﻄڪﺬﻃﻢﻋﺑﺧﻂﺤﺥﻊﺁﻜﻞﺦﻛﺎﺯﻘﺱﻪہﺐى'
+  trgLine = '،؟٪۱۲۳۴۵۶۷۸۹۰؛""پرزوصکییه۷اپثقیکتییسیهصیشضفغیج۶میکهجثنزلچیمعیدمب۴ذجیسفرخکتنشک۱گق۲تیویهاهد۸غنلصصپتبقسشهغلچوفشنرگکح۹۰۳هغجفچگصعیثطکذطمعبخطحخعآکلخکازقسههبی'
+
+  repl = str.maketrans(srcLine, trgLine)
+  repl[172] = 8204 # converting Microsoft Word ZWNJ to the unicode standard ZWNJ
+  return text.translate(repl)
+
 def save_session_state():
     # Collect relevant session state data
     save_data = {
@@ -431,6 +440,12 @@ def main():
                         st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1]["edited_text"].replace(st.session_state["to_replace"], st.session_state["replace_with"])
                     else:
                         st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1][extraction_method].replace(st.session_state["to_replace"], st.session_state["replace_with"])
+                
+                if st.button('Glue Chars'):
+                    if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
+                        st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = normalize(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
+                    else:
+                        st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = normalize(st.session_state.pages[st.session_state.page_num - 1][extraction_method])
 
         # Store filename in session state
         st.session_state.uploaded_filename = uploaded_file.name
