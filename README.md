@@ -12,7 +12,10 @@ features
     - tesseract
     - PyMuPDF
     - surya
-
+- Adding keywords and tags to the whole extracted JSON and to the pages.
+- Removing diacritics.
+- Replacing custom strings.
+- Building index object for specific pdfs.
 usage
 ---
 `streamlit run app.py`
