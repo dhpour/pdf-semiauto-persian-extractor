@@ -16,6 +16,7 @@ features
 - Removing diacritics.
 - Replacing custom strings.
 - Building index object for specific pdfs.
+
 usage
 ---
 `streamlit run app.py`
