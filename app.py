@@ -399,7 +399,7 @@ def main():
                 if st.session_state["parse_page"] or True:
                     st.button("Parse Page", on_click=parse_page)
 
-                if st.button('Build Index'):
+                if st.button('Build Index', help='For specific type of PDFs'):
                     p = st.session_state[f"page_text_{st.session_state.page_num}"]
                     print('hi')
                     inx = processor.build_index(p)
