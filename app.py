@@ -394,7 +394,7 @@ def main():
 
             if uploaded_file is not None:
 
-                st.button("Parse All", on_click=parse)
+                st.button("Parse All", on_click=parse, help='All pages')
 
                 if st.session_state["parse_page"] or True:
                     st.button("Parse Page", on_click=parse_page)
@@ -425,7 +425,7 @@ def main():
     if uploaded_file is not None:
         with st.sidebar:
             with st.expander("Edit:", expanded=False):
-                if st.button('Remove diacritics'):
+                if st.button('Remove diacritics', help='Remove diacritics from this page'):
                     if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
                         st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = remove_diacritics(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
                     else:
@@ -441,7 +441,7 @@ def main():
                     else:
                         st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = st.session_state.pages[st.session_state.page_num - 1][extraction_method].replace(st.session_state["to_replace"], st.session_state["replace_with"])
                 
-                if st.button('Glue Chars'):
+                if st.button('Glue Chars', help='Convert contextual character form to general form (in Arabic scripts)'):
                     if "edited_text" in st.session_state.pages[st.session_state.page_num - 1]:
                         st.session_state.pages[st.session_state.page_num - 1]["edited_text"] = normalize(st.session_state.pages[st.session_state.page_num - 1]["edited_text"])
                     else:
