@@ -15,6 +15,7 @@ features
 - Adding keywords and tags to the whole extracted JSON and to the pages.
 - Removing diacritics.
 - Replacing custom strings.
+- Reopening and editing JSON export.
 - Building index object for specific pdfs.
 
 usage
