@@ -1,4 +1,4 @@
-# PDF text Extractor for Arabic scripts
+# PDF text extractor for Arabic scripts
 
 features
 --------
