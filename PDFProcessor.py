@@ -13,6 +13,10 @@ from surya.model.detection.model import load_model as load_det_model, load_proce
 from surya.model.recognition.model import load_model as load_rec_model
 from surya.model.recognition.processor import load_processor as load_rec_processor
 import json
+from google.genai import Client
+from google.genai import types
+import base64
+from io import BytesIO
 
 load_dotenv()
 
@@ -25,7 +29,7 @@ class PDFProcessor:
         self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٠٩٨٧٦٥٤٣٢١"
         self.repl = str.maketrans(self.farsi_digits, self.latin_digits)
         self.langs = ["fa", "ar"] # Replace with your languages - optional but recommended
-    
+        self.client = Client(api_key=os.getenv("GOOGLE_API_KEY"))
     def load_surya(self):
         self.surya_det_processor, self.surya_det_model = load_det_processor(), load_det_model()
         self.surya_rec_model, self.surya_rec_processor = load_rec_model(), load_rec_processor()
@@ -175,6 +179,32 @@ class PDFProcessor:
             })
         return all_pages
 
+    def gemini_single_page(self, page):
+        p = self.doc[page]
+        pix = p.get_pixmap(matrix=fitz.Matrix(2, 2))
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        buffered = BytesIO()
+        img.save(buffered, format="JPEG")
+        img_bytes = buffered.getvalue()
+    
+        # Encode as base64
+        encoded_image = base64.b64encode(img_bytes).decode('utf-8')
+
+        # Convert PDF content to a format suitable for Gemini (bytes)
+        contents = [
+            types.Part.from_bytes(
+                mime_type="image/jpeg",
+                data=encoded_image
+            ),
+            "Extract all the text from this Image. Retain spaces between verses of poems with tab if needed. Just give the Image's content. No extra explanation is needed."
+        ]
+        response = self.client.models.generate_content(
+            model=os.getenv("GEMINI_MODEL"),
+            contents=contents
+        )
+
+        return response.text
+
     def parse_single_page(self, page, method, x=0):
         print('x: ', x)
         page = page - 1
@@ -208,6 +238,9 @@ class PDFProcessor:
                 if line['bbox'][0] < x: #480: #left col
                     all_lines += line['text'] + "\n"
             return all_lines
+
+        elif method=="gemini-2-flash": #"geminiflash2":
+            return self.gemini_single_page(page)
     
     def cleanup(self):
         if self.doc:

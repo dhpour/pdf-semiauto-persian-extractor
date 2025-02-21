@@ -370,7 +370,7 @@ def main():
     with st.sidebar:
         with st.expander("Configuration:", expanded=False):
             #st.header("Configuration")
-            extraction_methods = ["pdfplumber", "tesseract", "PyMuPDF", "surya"] #, "pdf2image/tesseract"]
+            extraction_methods = ["gemini-2-flash", "pdfplumber", "tesseract", "PyMuPDF", "surya"] #, "pdf2image/tesseract"]
             try:
                 #import doctr
                 #extraction_methods.extend(["doctr (OCR)", "All Methods"])
