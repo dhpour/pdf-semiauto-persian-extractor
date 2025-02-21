@@ -29,7 +29,8 @@ class PDFProcessor:
         self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٠٩٨٧٦٥٤٣٢١"
         self.repl = str.maketrans(self.farsi_digits, self.latin_digits)
         self.langs = ["fa", "ar"] # Replace with your languages - optional but recommended
-        self.client = Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.gemini_client = Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
     def load_surya(self):
         self.surya_det_processor, self.surya_det_model = load_det_processor(), load_det_model()
         self.surya_rec_model, self.surya_rec_processor = load_rec_model(), load_rec_processor()
@@ -198,7 +199,7 @@ class PDFProcessor:
             ),
             "Extract all the text from this Image. Retain spaces between verses of poems with tab if needed. Just give the Image's content. No extra explanation is needed."
         ]
-        response = self.client.models.generate_content(
+        response = self.gemini_client.models.generate_content(
             model=os.getenv("GEMINI_MODEL"),
             contents=contents
         )
