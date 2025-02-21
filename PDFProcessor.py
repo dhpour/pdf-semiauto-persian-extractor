@@ -25,9 +25,11 @@ class PDFProcessor:
         self.farsi_digits = "۱۲۳۴۵۶۷۸۹۰٠٩٨٧٦٥٤٣٢١"
         self.repl = str.maketrans(self.farsi_digits, self.latin_digits)
         self.langs = ["fa", "ar"] # Replace with your languages - optional but recommended
-        self.surya_det_processor, self.surya_det_model = load_det_processor(), load_det_model()
-        self.surya_rec_model, self.surya_rec_processor = load_rec_model(), load_rec_processor()   
     
+    def load_surya(self):
+        self.surya_det_processor, self.surya_det_model = load_det_processor(), load_det_model()
+        self.surya_rec_model, self.surya_rec_processor = load_rec_model(), load_rec_processor()
+
     def init_doctr(self):
         if self.doctr_model is None:
             from doctr.io import DocumentFile

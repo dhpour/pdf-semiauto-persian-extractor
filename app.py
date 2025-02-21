@@ -381,6 +381,11 @@ def main():
             extraction_method = st.radio("Select Extraction Method", extraction_methods)
 
             if extraction_method == "surya":
+                if not hasattr(processor, 'surya_det_processor') or \
+                    not hasattr(processor, 'surya_det_model') or \
+                    not hasattr(processor, 'surya_rec_model') or \
+                    not hasattr(processor, 'surya_rec_processor'):
+                    processor.load_surya()
                 st.number_input("2 col center X:", key="col_center")
             
             #uploaded_file = st.sidebar.file_uploader("Choose a PDF file", type="pdf", key=st.session_state["uploader_pdf_key"])
