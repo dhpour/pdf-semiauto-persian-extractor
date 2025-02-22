@@ -11,6 +11,7 @@ import fitz
 import base64
 from streamlit_tags import st_tags, st_tags_sidebar
 import pandas as pd
+import time
 
 load_dotenv()
 
@@ -111,8 +112,36 @@ def process_pdf(processor, pdf_path, extraction_method):
             r["tesseract"] = r["text"]
             del r["text"]
         results.extend(tesser_results)
+    
+    if extraction_method == "gemini-2-flash":
+        progress_text = "Parsing pages..."
+        st.session_state.stop_parse_process = False
+        if st.button("Stop"):
+            st.session_state.stop_parse_process = True
+        my_bar = st.progress(0, text=progress_text)
+        pdf_length = len(processor.doc)
+
+        for page_num in range(pdf_length):
+            
+            if "gemini-2-flash" not in st.session_state.pages[page_num]:
+                page_text = processor.gemini_single_page(page_num)
+                st.session_state.pages[page_num]["gemini-2-flash"] = page_text
+            else:
+                pass
+            
+            if st.session_state.stop_parse_process:
+                break
+            print(page_num)
+            my_bar.progress(page_num/pdf_length, text=progress_text)
+            time.sleep(2)
+
+        time.sleep(1)
+        my_bar.empty()
+
     return results
+
 def reset_session():
+    st.session_state.stop_parse_process = False
     st.session_state.page_num = 1
     st.session_state.pages = []
     st.session_state.total_pages = 0
@@ -273,6 +302,8 @@ def main():
     st.set_page_config(layout="wide")
 
     # Initialize session states
+    if 'stop_parse_process' not in st.session_state:
+        st.session_state.stop_parse_process = False
     if 'page_num' not in st.session_state:
         st.session_state.page_num = 1
     if 'pages' not in st.session_state:
