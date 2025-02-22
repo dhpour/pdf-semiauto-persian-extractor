@@ -8,6 +8,7 @@ features
 - Compatible with Persian (and Arabic) right to left scripts.
 - Converting arabic script contextual character forms into the general form (e.g. converts `ﺑ`, `ﺒ`, `ﺐ` into `ب` or `ﻫ`, `ﻬ`, `ﻪ` into `ه`)
 - Supporting mutiple libraries for text extraction (both text-based and OCR-based)
+    - gemini API
     - pdfplumber
     - tesseract
     - PyMuPDF
